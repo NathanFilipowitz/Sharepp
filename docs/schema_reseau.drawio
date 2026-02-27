@@ -1,0 +1,52 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
+  <diagram name="Page-1" id="2sUybePDZPFAmt3RdkrW">
+    <mxGraphModel dx="1073" dy="742" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-1" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer.svg;" vertex="1" parent="1">
+          <mxGeometry x="327.30000000000007" y="140" width="45.6" height="61.800000000000004" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-2" value="192.168.1.82" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="320.1" y="201.8" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-3" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Personal_Computer_with_Server.svg;" vertex="1" parent="1">
+          <mxGeometry x="470" y="290" width="62.4" height="62.4" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-4" value="Serveur de fichiers (aiohttp)" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="540" y="310" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-5" value="" style="image;html=1;image=img/lib/clip_art/networking/Wireless_Router_128x128.png" vertex="1" parent="1">
+          <mxGeometry x="292.9" y="285" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-6" value="192.168.1.50" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="470" y="352.4" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-8" value="" style="image;points=[];aspect=fixed;html=1;align=center;shadow=0;dashed=0;image=img/lib/allied_telesis/computer_and_terminals/Smartphone.svg;" vertex="1" parent="1">
+          <mxGeometry x="320.1" y="460" width="19.8" height="43.199999999999996" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-9" value="Client Web" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="372.90000000000003" y="155.9" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-13" value="1. Scan QR Code" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="-ylKBqhz8oFFgmaZeiVg-10" target="-ylKBqhz8oFFgmaZeiVg-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-14" value="2. Requêtes HTTP" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="-ylKBqhz8oFFgmaZeiVg-10" target="-ylKBqhz8oFFgmaZeiVg-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-10" value="Client Web" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="339.9" y="466.6" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-11" value="192.168.1.12" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="300" y="503.2" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-15" value="1. http://192.168.1.50:8080" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.487;entryY=-0.031;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="-ylKBqhz8oFFgmaZeiVg-9" target="-ylKBqhz8oFFgmaZeiVg-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-ylKBqhz8oFFgmaZeiVg-16" value="2. Requêtes HTTP" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=-0.056;entryY=0.013;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="-ylKBqhz8oFFgmaZeiVg-9" target="-ylKBqhz8oFFgmaZeiVg-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
