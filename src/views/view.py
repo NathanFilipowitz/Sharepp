@@ -19,10 +19,15 @@ class View:
         
         self.result_text = ft.Text("Aucun dossier n'a encore été sélectionné", selectable=True)
         
+        self.btn_start = ft.Button("Démarrer le partage", on_click=self.controller.start_server, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
+        self.btn_stop = ft.Button("Arrêter le partage", on_click=self.controller.stop_server, bgcolor=ft.Colors.RED, color=ft.Colors.WHITE, disabled=True)
+
         self.page.add(
             ft.Row([
                 # ft.Button("Pick File", on_click=self.controller.pick_file),
                 ft.Button("Pick Folder", on_click=self.controller.pick_folder),
+                self.btn_start,
+                self.btn_stop,
             ]),
             ft.Text("Selected path:", weight=ft.FontWeight.BOLD),
             self.result_text
@@ -112,4 +117,9 @@ class View:
     
     def update_result(self, text):
         self.result_text.value = text
+        self.page.update()
+
+    def update_server_status(self, running):
+        self.btn_start.disabled = running
+        self.btn_stop.disabled = not running
         self.page.update()
