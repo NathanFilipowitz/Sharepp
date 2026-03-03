@@ -22,12 +22,12 @@ class Controller:
         self.model = Model()
         self.view = View(page, self)
     
-    # async def pick_file(self, e):
-    #     result = await self.view.file_picker.pick_files()
-    #     if result and result.files:
-    #         path = result.files[0].path
-    #         self.model.set_path(path)
-    #         self.view.update_result(path)
+    # Thread dédié à l'affichage des logs, car le serveur aiohttp ne tourne pas sur le même thread que flet
+    # Thread dedicated to rendering logs, because the aiohttp server runs on a different one than Flet's.
+    # message: "success", "warning", "error", "info"
+    def log(self, message: str, level: str):
+        # Use run_thread to call UI-updating methods from other threads
+        self.view.page.run_thread(self.view.add_log_entry, message, level)
     
     async def pick_folder(self, e):
         path = await self.view.file_picker.get_directory_path()
@@ -35,16 +35,19 @@ class Controller:
             self.model.set_path(path)
             self.view.update_result(path)
     
+    async def on_file_picker_result(self, e: ft.FilePickerResultEvent):
+        if e.path:
+            self.model.set_path(e.path)
+            self.view.update_result(f"Dossier : {e.path}")
+            self.log(f"Dossier sélectionné : {e.path}", "info")
+    
+    def update_password(self, value):
+        self.model.set_password(value)
+    
     def toggle_logs(self, e):
         self.model.toggle_logs()
         self.view.toggle_logs_visibility()
     
-    def open_settings(self, e):
-        self.view.show_settings()
-    
-    def close_settings(self, e):
-        self.view.close_settings_dialog()
-
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
         # Check that a path was selected and the server isn't already running
@@ -54,13 +57,15 @@ class Controller:
         if self.model.server_running:
             return
 
-        # First handler, handles serving the files from the selected path to the server. Calls the download_view file for rendering
+        # First handler, handles serving the files from the selected path to the server. Calls the download_view file for rendering the front page
         async def handle_index(request):
+            self.log(f"Nouvelle connexion de {request.remote}", "success")
             try:
                 files = os.listdir(self.model.selected_path)
                 # It uses the download_view to generate an HTML page with links to the files.
                 return web.Response(text=download_view.generate_html(files), content_type='text/html')
             except Exception as err:
+                self.log(f"Erreur serveur: {str(err)}", "error")
                 return web.Response(text=str(err), status=500)
 
         # Second handler, serves a specific file when the user clicks on one.
@@ -69,6 +74,8 @@ class Controller:
             filename = request.match_info.get('filename')
             if not filename:
                 return web.Response(text="Bad Request", status=400)
+
+            self.log(f"{request.remote} télécharge {filename}", "warning")
 
             # Security feature (AI Implemantation):
             # To prevent users from accessing files outside the shared folder (directory traversal attack),
