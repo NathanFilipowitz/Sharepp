@@ -18,8 +18,6 @@ from controllers.app_controller import Controller
 
 def main(page: ft.Page):
     page.title = "Share++"
-    page.window_width = 900
-    page.window_height = 600
     Controller(page)
 
 ft.run(main)
