@@ -8,6 +8,7 @@ Purpose: Handles json database for the app, and methods to interact with it for 
 """
 import json
 import os
+import hashlib
 
 class Model:
     def __init__(self, config_path="settings.json"):
