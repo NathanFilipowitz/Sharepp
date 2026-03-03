@@ -41,12 +41,15 @@ class Model:
             json.dump(self.data, f, indent=4)
 
     # Get
+    @property
     def selected_path(self): 
         return self.data["selected_path"]
     
+    @property
     def port(self): 
         return self.data["port"]
 
+    @property
     def qr_enabled(self): 
         return self.data["qr_enabled"]
 
@@ -77,7 +80,7 @@ class Model:
     
     def toggle_logs(self):
         self.data["logs_visible"] = not self.data["logs_visible"]
-        self.save_settings
+        self.save_settings()
     
 
     def check_password(self, input_pwd):
