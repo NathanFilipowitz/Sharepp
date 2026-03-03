@@ -25,6 +25,7 @@ class View:
             overflow=ft.TextOverflow.CLIP
         )
         
+        # Need to fix, not used but can't get them out either
         self.btn_start = ft.Button("Démarrer le partage", on_click=self.controller.start_server, bgcolor=ft.Colors.GREEN, color=ft.Colors.WHITE)
         self.btn_stop = ft.Button("Arrêter le partage", on_click=self.controller.stop_server, bgcolor=ft.Colors.RED, color=ft.Colors.WHITE, disabled=True)
         
@@ -176,7 +177,6 @@ class View:
     def toggle_password_visibility(self, e):
         self.password_entry.visible = not self.password_entry.visible
         e.control.selected = self.password_entry.visible
-        self.page.update()
     
     def update_result(self, text):
         self.result_text.value = text
