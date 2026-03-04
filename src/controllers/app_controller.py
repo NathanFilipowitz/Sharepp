@@ -22,7 +22,6 @@ class Controller:
         self.model = Model()
         self.view = View(page, self)
     
-    # Thread dédié à l'affichage des logs, car le serveur aiohttp ne tourne pas sur le même thread que flet
     # Thread dedicated to rendering logs, because the aiohttp server runs on a different one than Flet's.
     # message: "success", "warning", "error", "info"
     def log(self, message: str, level: str):
@@ -33,13 +32,23 @@ class Controller:
         path = await self.view.file_picker.get_directory_path()
         if path:
             self.model.set_path(path)
-            self.view.update_result(path)
+            self.view.update_ui_for_path(path)
     
     async def on_file_picker_result(self, e: ft.FilePickerResultEvent):
         if e.path:
             self.model.set_path(e.path)
-            self.view.update_result(f"Dossier : {e.path}")
+            self.view.update_ui_for_path(e.path)
             self.log(f"Dossier sélectionné : {e.path}", "info")
+    
+    def toggle_remember_path(self, e):
+        self.model.toggle_remember_path()
+        e.control.checked = self.model.data["remember_path"]
+        self.view.page.update()
+    
+    def clear_path(self, e):
+        self.model.set_path("")
+        self.view.update_ui_for_path("")
+        self.log("Path cleared by user", "info")
     
     def update_password(self, value):
         self.model.set_password(value)
@@ -47,6 +56,11 @@ class Controller:
     def toggle_logs(self, e):
         self.model.toggle_logs()
         self.view.toggle_logs_visibility()
+    
+    def toggle_protection(self):
+        self.model.toggle_protection()
+        status = "enabled" if self.model.data["is_protected"] else "disabled"
+        self.log(f"Protection {status}", "info")
     
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
@@ -110,13 +124,13 @@ class Controller:
 
         runner = web.AppRunner(app)
         await runner.setup()
-        site = web.TCPSite(runner, '0.0.0.0', 8080)
+        site = web.TCPSite(runner, '0.0.0.0', self.model.port)
         await site.start()
         
         self.model.server_runner = runner
         self.model.server_running = True
         self.view.update_server_status(True)
-        self.view.update_result(f"Serveur démarré sur http://localhost:8080 (Dossier: {self.model.selected_path})")
+        self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
 
     
     async def stop_server(self, e):
@@ -125,4 +139,5 @@ class Controller:
             self.model.server_runner = None
             self.model.server_running = False
             self.view.update_server_status(False)
-            self.view.update_result("Serveur arrêté.")
+            self.view.update_ui_for_path("Serveur arrêté.")
+            self.log("Serveur fermé", "error")
