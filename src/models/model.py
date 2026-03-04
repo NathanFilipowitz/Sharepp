@@ -25,7 +25,8 @@ class Model:
             "is_protected": False,
             "password": "",
             "logs_visible": True,
-            "qr_enabled": True
+            "qr_enabled": True,
+            "remember_path": True
         }
         # Apply saved data
         self.load_settings()
@@ -40,6 +41,13 @@ class Model:
     def save_settings(self):
         with open(self.config_path, "w") as f:
             json.dump(self.data, f, indent=4)
+    
+
+    def toggle_remember_path(self):
+        self.data["remember_path"] = not self.data["remember_path"]
+        if not self.data["remember_path"]:
+            self.data["selected_path"] = "" # Clear saved path
+        self.save_settings()
 
     # Get
     @property
@@ -53,6 +61,10 @@ class Model:
     @property
     def qr_enabled(self): 
         return self.data["qr_enabled"]
+    
+    @property
+    def remember_path(self):
+        return self.data["remember_path"]
 
     # Set
     def set_path(self, path):
