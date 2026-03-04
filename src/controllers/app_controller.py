@@ -7,15 +7,16 @@ Purpose: Handles application business logic
 
 """
 
-from models.model import Model
-from views.view import View
 import flet as ft
 import os
 import shutil
+import socket
 import tempfile
 from aiohttp import web
-from views import download_view
+from models.model import Model
 from pathlib import Path
+from views import download_view
+from views.view import View
 
 class Controller:
     def __init__(self, page: ft.Page):
@@ -63,14 +64,14 @@ class Controller:
         self.log(f"Protection {status}", "info")
     
     def get_local_ip(self):
-        socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
-            socket.connect(('8.8.8.8', 80))
+            s.connect(('8.8.8.8', 80))
             ip = s.getsockname()[0]
         except Exception:
             ip = None
         finally:
-            socket.close()
+            s.close()
         return ip
           
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
