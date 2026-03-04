@@ -107,7 +107,7 @@ class View:
             visible=False,
             on_change=lambda e: self.controller.update_password(e.control.value)
         )
-
+        
         self.password_protect_control_chip = ft.Chip(
                 label=ft.Text("Protéger le partage"),
                 on_click=self.toggle_password_visibility,
