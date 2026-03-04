@@ -62,6 +62,17 @@ class Controller:
         status = "enabled" if self.model.data["is_protected"] else "disabled"
         self.log(f"Protection {status}", "info")
     
+    def get_local_ip(self):
+        socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            socket.connect(('8.8.8.8', 80))
+            ip = s.getsockname()[0]
+        except Exception:
+            ip = None
+        finally:
+            socket.close()
+        return ip
+          
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
         # Check that a path was selected and the server isn't already running
