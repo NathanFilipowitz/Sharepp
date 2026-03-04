@@ -6,9 +6,12 @@ Date:    2026-02-25
 Purpose: Handles json database for the app, and methods to interact with it for the controller.
 
 """
+import base64
+import hashlib
+import io
 import json
 import os
-import hashlib
+import qrcode
 
 class Model:
     def __init__(self, config_path="settings.json"):
