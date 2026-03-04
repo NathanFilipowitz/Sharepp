@@ -107,33 +107,59 @@ class View:
             visible=False,
             on_change=lambda e: self.controller.update_password(e.control.value)
         )
-        
+
         self.password_protect_control_chip = ft.Chip(
                 label=ft.Text("Protéger le partage"),
                 on_click=self.toggle_password_visibility,
             )
 
+        self.controls_content = ft.Column([
+            self.pick_button,
+            ft.Text("Répertoire:", weight=ft.FontWeight.BOLD),
+            ft.Container(
+                self.result_text,
+                width=200
+            ),
+            self.password_protect_control_chip,
+            ft.Container(
+                self.password_entry,
+                width=200,
+            )
+        ],
+        spacing=10,
+        alignment=ft.MainAxisAlignment.CENTER
+        )
+
+        # QR code content, starts hidden
+        self.qr_image = ft.Image(
+            src=None,
+            width=250,
+            height=250,
+            fit=ft.BoxFit.CONTAIN
+        )
+        self.qr_url_text = ft.Text(
+            "",
+            size=12,
+            text_align=ft.TextAlign.CENTER,
+            selectable=True
+        )
+        self.qr_content = ft.Column([
+            ft.Text("Scan to download", weight=ft.FontWeight.BOLD, size=16),
+            self.qr_image,
+            self.qr_url_text
+        ],
+        spacing=10,
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        )
+
         # Main functionnalities Card (left column)
         self.toggle_card = ft.Card(
             content=ft.Container(
-                content=ft.Column([
-                    self.pick_button,
-                    ft.Text("Répertoire:", weight=ft.FontWeight.BOLD),
-                    ft.Container(
-                        self.result_text,
-                        width=200
-                    ),
-                    self.password_protect_control_chip,
-                    ft.Container(
-                        self.password_entry,
-                        width=200,
-                    )
-                ],
-                spacing=10,
-                alignment=ft.MainAxisAlignment.CENTER
-                ),
+                content=self.controls_content,
                 alignment=ft.Alignment.CENTER,
                 ink=True,
+                padding=20
             ),
             height=400,
             margin=20,
@@ -198,4 +224,17 @@ class View:
         self.start_icon.visible = not running
         self.stop_icon.visible = running
         self.toggle_card.disabled = running
+        self.page.update()
+    
+    # Replace controls with QR code for the card content
+    def show_qr_code(self, qr_data_url, url_text):
+        self.qr_image.src = qr_data_url
+        self.qr_url_text.value = url_text
+        self.toggle_card.content.content = self.qr_content
+        self.page.update()
+    
+    # replace QR code with controls for the card content
+    def show_controls(self):
+        self.toggle_card.content.content = self.controls_content
+        self.qr_image.src = None
         self.page.update()

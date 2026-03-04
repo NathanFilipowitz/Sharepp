@@ -141,8 +141,16 @@ class Controller:
         self.model.server_runner = runner
         self.model.server_running = True
         self.view.update_server_status(True)
-        self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
 
+        # QR code generation
+        local_ip = self.get_local_ip()
+        if local_ip and self.model.qr_enabled:
+            qr_data = self.model.generate_qr_data_url(local_ip)
+            if qr_data:
+                url_text = f"http://{local_ip}:{self.model.port}"
+                self.view.show_qr_code(qr_data, url_text)
+        
+        self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
     
     async def stop_server(self, e):
         if self.model.server_running and self.model.server_runner:
@@ -151,4 +159,5 @@ class Controller:
             self.model.server_running = False
             self.view.update_server_status(False)
             self.view.update_ui_for_path("Serveur arrêté.")
+            self.view.show_controls()
             self.log("Serveur fermé", "error")
