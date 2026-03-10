@@ -35,3 +35,14 @@ def test_password_hashing():
     # we remove the file created for the test
     if os.path.exists("test_temp.json"):
         os.remove("test_temp.json")
+
+# Tests qrcode generation and base64 encoding from url
+def test_qr_generation():
+    model = Model(config_path="test_temp.json")
+    qr_url = model.generate_qr_data_url("192.168.1.10")
+    
+    # just check if image was created
+    assert qr_url.startswith("data:image/png;base64,")
+    
+    if os.path.exists("test_temp.json"):
+        os.remove("test_temp.json")
