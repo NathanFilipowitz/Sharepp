@@ -29,7 +29,7 @@ def test_tu01_model_initialization(tmp_path):
 def test_tu02_password_hashing(tmp_path):
     # Arrange
     config_file = tmp_path / "test_temp_pwd.json"
-    model = Model(config_path="config_file")
+    model = Model(config_path=str(config_file))
     password = "reallyGoodPassword"
 
     # Act
@@ -46,7 +46,7 @@ def test_tu02_password_hashing(tmp_path):
 def test_tu03_qr_generation(tmp_path):
     # Arrange
     config_file = tmp_path / "test_temp_qr.json"
-    model = Model(config_path="config_file")
+    model = Model(config_path=str(config_file))
 
     # Act
     qr_base64 = model.generate_qr_data_url("192.168.1.10")
