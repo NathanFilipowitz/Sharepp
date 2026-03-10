@@ -66,3 +66,13 @@ async def browser_mock(aiohttp_client, tmp_path):
     app.router.add_get('/', handle_index_mock)
     app.router.add_get('/{filename}', handle_download_mock)
     return await aiohttp_client(app)
+
+# Tests (Act & Assert)
+# TI01 : HTML generation with correct content (test.txt and a subfolder)
+@pytest.mark.asyncio
+async def test_ti01_index_list_files(browser_mock):
+    response = await browser_mock.get('/')
+    assert response.status == 200
+    html_content = await response.text()
+    assert "test.txt" in html_content
+    assert "subfolder" in html_content
