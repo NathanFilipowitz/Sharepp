@@ -76,3 +76,10 @@ async def test_ti01_index_list_files(browser_mock):
     html_content = await response.text()
     assert "test.txt" in html_content
     assert "subfolder" in html_content
+
+# TI02 : Directory traversal
+@pytest.mark.asyncio
+async def test_ti02_security_traversal(browser_mock):
+    # simulate user trying to write in URL to reach out of reach files
+    response = await browser_mock.get('/../secret.txt')
+    assert response.status in [403, 404]
