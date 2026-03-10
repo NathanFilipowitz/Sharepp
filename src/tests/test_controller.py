@@ -83,3 +83,10 @@ async def test_ti02_security_traversal(browser_mock):
     # simulate user trying to write in URL to reach out of reach files
     response = await browser_mock.get('/../secret.txt')
     assert response.status in [403, 404]
+
+# TI03 : Downloading a folder should generate a zip
+@pytest.mark.asyncio
+async def test_ti03_folder_to_zip(browser_mock):
+    response = await browser_mock.get('/subfolder')
+    assert response.status == 200
+    assert response.content_type == 'application/zip'
