@@ -21,3 +21,17 @@ def test_model_initialization(tmp_path):
     assert model.data["port"] == 8080
     assert os.path.exists(config_file)
 
+# Tests password hashing from mock settings
+def test_password_hashing():
+    model = Model(config_path="test_temp.json")
+    password = "reallyGoodPassword"
+    model.set_password(password)
+    
+    # pw not in clear, was hashed correctly, doesn't work with another pw
+    assert model.data["password"] != password
+    assert model.check_password(password) is True
+    assert model.check_password("falsePassword") is False
+    
+    # we remove the file created for the test
+    if os.path.exists("test_temp.json"):
+        os.remove("test_temp.json")
