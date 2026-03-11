@@ -39,6 +39,8 @@ class Model:
         if os.path.exists(self.config_path):
             with open(self.config_path, "r") as file:
                 self.data.update(json.load(file))
+        # Reset protection on every app launch
+        self.data["is_protected"] = False
                 
     # Write settings to json
     def save_settings(self):
