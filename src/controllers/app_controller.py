@@ -83,6 +83,40 @@ class Controller:
         if self.model.server_running:
             return
 
+        async def require_auth(request, handler):
+            # Skip auth if protection disabled
+            if not self.model.data["is_protected"]:
+                return await handler(request)
+                
+            # No password set = allow all
+            if not self.model.data["password"]:
+                return await handler(request)
+            
+            # Check for Authorization header
+            auth_header = request.headers.get('Authorization', '')
+            
+            if auth_header.startswith('Basic '):
+                import base64
+                # Decode "user:password" from base64
+                try:
+                    encoded = auth_header[6:]  # Remove "Basic "
+                    decoded = base64.b64decode(encoded).decode('utf-8')
+                    # Format is "username:password", we only care about password
+                    _, password = decoded.split(':', 1)
+                    
+                    if self.model.check_password(password):
+                        return await handler(request)
+                except Exception:
+                    pass  # Invalid auth header
+            
+            # Wrong password or no auth header triggers browser popup
+            return web.Response(
+                status=401,
+                headers={'WWW-Authenticate': 'Basic realm="Share++ (any username works)"'},
+                text="Authentication required"
+            )
+
+
         # First handler, handles serving the files from the selected path to the server. Calls the download_view file for rendering the front page
         async def handle_index(request):
             self.log(f"Nouvelle connexion de {request.remote}", "success")
@@ -127,12 +161,18 @@ class Controller:
             
             return web.Response(text="File not found", status=404)
 
-        app = web.Application()
 
+        async def protected_index(request):
+            return await require_auth(request, handle_index)
+        
+        async def protected_download(request):
+            return await require_auth(request, handle_download)
+
+        app = web.Application()
         # The route for the main page (e.g., http://localhost:8080/)
-        app.router.add_get('/', handle_index)
+        app.router.add_get('/', protected_index)
         # The route for file downloads (e.g., http://localhost:8080/document.pdf)
-        app.router.add_get('/{filename}', handle_download)
+        app.router.add_get('/{filename}', protected_download)
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -151,6 +191,7 @@ class Controller:
                 url_text = f"http://{local_ip}:{self.model.port}"
                 self.view.show_qr_code(qr_data, url_text)
         
+        self.log("Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)", "warning" if self.model.data["is_protected"] else "info")
         self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
     
     async def stop_server(self, e):
