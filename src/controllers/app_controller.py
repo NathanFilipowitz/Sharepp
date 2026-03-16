@@ -7,6 +7,7 @@ Purpose: Handles application business logic
 
 """
 
+import sys
 import flet as ft
 import os
 import shutil
@@ -35,7 +36,7 @@ class Controller:
             self.model.set_path(path)
             self.view.update_ui_for_path(path)
     
-    async def on_file_picker_result(self, e: ft.FilePickerResultEvent):
+    async def on_file_picker_result(self, e: ft.FilePickerUploadEvent):
         if e.path:
             self.model.set_path(e.path)
             self.view.update_ui_for_path(e.path)
