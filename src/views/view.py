@@ -93,6 +93,11 @@ class View:
                             on_click=self.controller.toggle_remember_path
                         ),
                         ft.PopupMenuItem("Clear Saved Path", on_click=self.controller.clear_path),
+                        ft.PopupMenuItem(
+                            content=ft.Text("Add to Context Menu"),
+                            checked=self.controller.model.data.get("context_menu_enabled", False),
+                            on_click=self.controller.toggle_context_menu
+                        )
                     ],
                     icon_color=ft.Colors.WHITE
                 ),
@@ -204,6 +209,11 @@ class View:
         self.password_entry.visible = not self.password_entry.visible
         e.control.selected = self.password_entry.visible
         self.controller.toggle_protection() 
+        self.page.update()
+
+    def toggle_context_menu(self, e):
+        self.controller.model.toggle_context_menu()
+        e.control.selected = self.controller.model.data.context_menu_enabled
         self.page.update()
 
     # Updates title and shows/hides server icons if a path was selected
