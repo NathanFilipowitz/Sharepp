@@ -242,6 +242,5 @@ class Controller:
             self.model.server_runner = None
             self.model.server_running = False
             self.view.update_server_status(False)
-            self.view.update_ui_for_path("Serveur arrêté.")
             self.view.show_controls()
             self.log("Serveur fermé", "error")
