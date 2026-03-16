@@ -9,15 +9,24 @@ Purpose: Entry point for the application. It should just make calls to other fil
 
 import flet as ft
 import sys
+import os
 from pathlib import Path
+from controllers.app_controller import Controller
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from controllers.app_controller import Controller
 
 def main(page: ft.Page):
     page.title = "Share++"
-    Controller(page)
+    app = Controller(page)
+
+    if len(sys.argv) > 1:
+        folder_path = sys.argv[1]
+        if os.path.isdir(folder_path):
+            app.model.set_path(folder_path)
+            page.run_task(app.start_server, None)
+            app.view.update_ui_for_path(folder_path)
+            page.update()
 
 ft.run(main)
