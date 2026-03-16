@@ -74,7 +74,48 @@ class Controller:
         finally:
             s.close()
         return ip
-          
+
+    def toggle_context_menu(self, event):
+        # reverse current state
+        new_state = not self.model.data.get("context_menu_enabled", False)
+        
+        # Windows registry logic (AI suggested)
+        if sys.platform == "win32":
+            try:
+                self._update_windows_registry(new_state)
+                self.model.data["context_menu_enabled"] = new_state
+                self.model.save_settings()
+                event.control.checked = new_state
+                event.control.page.update()
+            except Exception as e:
+                print(f"Erreur registre : {e}")
+
+    # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
+    def _update_windows_registry(self, add_menu: bool):
+        import winreg
+        # Use HKEY_CURRENT_USER to prevent administration privilege requirement
+        key_path = r"Software\Classes\Directory\shell\Sharepp"
+        
+        if add_menu:
+            # Create the menu in contextual right-click
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                winreg.SetValue(key, "", winreg.REG_SZ, "Partager avec Share++")
+                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, sys.executable)
+
+            # Create the command to open the app
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command") as key:
+                # AI Implementation of finding app path in system, universally
+                # sys.executable = python.exe | sys.argv[0] = main.py
+                app_path = os.path.abspath(sys.argv[0])
+                # %1 represents the selected folder path (provided by windows)
+                winreg.SetValue(key, "", winreg.REG_SZ, f'"{sys.executable}" "{app_path}" "%1"')
+        else:
+            try:
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
+            except WindowsError:
+                pass
+
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
         # Check that a path was selected and the server isn't already running
