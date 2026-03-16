@@ -71,6 +71,10 @@ class Model:
     def remember_path(self):
         return self.data["remember_path"]
 
+    @property
+    def context_menu_enabled(self):
+        return self.data["context_menu_enabled"]
+
     # Set
     def set_path(self, path):
         self.data["selected_path"] = path
