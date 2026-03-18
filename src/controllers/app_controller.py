@@ -151,7 +151,7 @@ class Controller:
                 except Exception:
                     pass  # Invalid auth header
             
-            # Wrong password or no auth header triggers browser popup
+            # Password enabled or no auth header triggers browser popup
             return web.Response(
                 status=401,
                 headers={'WWW-Authenticate': 'Basic realm="Share++ (any username works)"'},
