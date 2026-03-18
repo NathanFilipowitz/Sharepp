@@ -71,7 +71,7 @@ class View:
         )
         
         self.page.appbar = ft.AppBar(
-            leading=ft.Text("Share++", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            leading=ft.Image(src="icons/app_icon.svg", color=ft.Colors.BLUE_200),
             leading_width=100,
             title=self.appbar_title,
             center_title=True,
