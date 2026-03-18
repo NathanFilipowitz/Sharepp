@@ -223,6 +223,7 @@ class View:
             self.result_text.value = path
             self.start_icon.visible = not is_running
             self.stop_icon.visible = is_running
+            self.pick_button.icon = ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED
         else:
             self.appbar_title.value = "SÉLECTIONNER UN DOSSIER"
             self.start_icon.visible = False
