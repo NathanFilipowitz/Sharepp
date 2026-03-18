@@ -114,7 +114,7 @@ class Controller:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
             except WindowsError:
-                pass
+                self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
 
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
