@@ -97,6 +97,14 @@ class View:
                             content=ft.Text("Add to Context Menu"),
                             checked=self.controller.model.data.get("context_menu_enabled", False),
                             on_click=self.controller.toggle_context_menu
+                        ),
+                        ft.PopupMenuItem(
+                            content="Clear l'adresse",
+                            on_click=self.controller.clear_path),
+                        ft.PopupMenuItem(
+                            content="Copier l'adresse automatiquement",
+                            checked=self.controller.model.data["copy_to_clipboard"],
+                            on_click=self.controller.toggle_copy_clipboard
                         )
                     ],
                     icon_color=ft.Colors.WHITE

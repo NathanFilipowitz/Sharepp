@@ -75,6 +75,11 @@ class Controller:
             s.close()
         return ip
 
+    def toggle_copy_clipboard(self, event):
+        self.model.toggle_copy_clipboard()
+        event.control.checked = self.model.data["copy_to_clipboard"]
+        self.view.page.update()
+
     def toggle_context_menu(self, event):
         # reverse current state
         new_state = not self.model.data.get("context_menu_enabled", False)
@@ -225,13 +230,18 @@ class Controller:
         self.model.server_running = True
         self.view.update_server_status(True)
 
-        # QR code generation
+        # Copy to clipboard & QR code generation
         local_ip = self.get_local_ip()
-        if local_ip and self.model.qr_enabled:
-            qr_data = self.model.generate_qr_data_url(local_ip)
-            if qr_data:
-                url_text = f"http://{local_ip}:{self.model.port}"
-                self.view.show_qr_code(qr_data, url_text)
+        if local_ip:
+            url = f"http://{local_ip}:{self.model.port}"
+            if self.model.copy_to_clipboard:
+                await ft.Clipboard().set(url)
+                self.view.page.show_dialog(ft.SnackBar("Adresse copiée dans le presse-papier"))
+
+            if self.model.qr_enabled:
+                qr_data = self.generate_qr_data_url(local_ip)
+                if qr_data:
+                    self.view.show_qr_code(qr_data, url)
         
         self.log("Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)", "warning" if self.model.data["is_protected"] else "info")
         self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
