@@ -33,10 +33,10 @@ class Model:
         # Apply saved data
         self.load_settings()
     
-    # Load settings from settings.json if it exists
+    # Load settings from settings.json
     def load_settings(self):
         if os.path.exists(self.config_path):
-            with open(self.config_path, "r") as file:
+            with open(self.config_path) as file:
                 self.data.update(json.load(file))
         # Reset protection on every app launch
         self.data["is_protected"] = False

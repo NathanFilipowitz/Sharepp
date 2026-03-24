@@ -72,7 +72,7 @@ class View:
         )
         
         self.page.appbar = ft.AppBar(
-            leading=ft.Image(src="icons/app_icon.svg", color=ft.Colors.BLUE_200),
+            leading=ft.Image(src="icons/app_icon_compressed.svg"),
             leading_width=100,
             title=self.appbar_title,
             center_title=True,
@@ -89,13 +89,12 @@ class View:
                 ft.PopupMenuButton(
                     items=[
                         ft.PopupMenuItem(
-                            content="Remember Last Path", 
+                            content="Enregistrer le chemin", 
                             checked=self.controller.model.data["remember_path"],
                             on_click=self.controller.toggle_remember_path
                         ),
-                        ft.PopupMenuItem("Clear Saved Path", on_click=self.controller.clear_path),
                         ft.PopupMenuItem(
-                            content=ft.Text("Add to Context Menu"),
+                            content="Ajouter au menu contextuel",
                             checked=self.controller.model.data.get("context_menu_enabled", False),
                             on_click=self.controller.toggle_context_menu
                         ),
@@ -221,7 +220,7 @@ class View:
         self.page.update()
 
     def toggle_context_menu(self, e):
-        self.controller.model.toggle_context_menu()
+        self.controller.toggle_context_menu()
         e.control.selected = self.controller.model.data.context_menu_enabled
         self.page.update()
 
@@ -235,8 +234,10 @@ class View:
             self.pick_button.icon = ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED
         else:
             self.appbar_title.value = "SÉLECTIONNER UN DOSSIER"
+            self.result_text.value = f"Aucun dossier n'a encore été sélectionné"
             self.start_icon.visible = False
             self.stop_icon.visible = False
+            self.pick_button.icon = ft.Icons.FOLDER_OPEN_ROUNDED
         self.page.update()
 
     # Toggle the icons between start and stop, and turns the left Card unavailable whenever the server is started.
