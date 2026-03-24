@@ -6,12 +6,9 @@ Date:    2026-02-25
 Purpose: Handles json database for the app, and methods to interact with it for the controller.
 
 """
-import base64
 import hashlib
-import io
 import json
 import os
-import qrcode
 
 class Model:
     def __init__(self, config_path="settings.json"):
@@ -125,27 +122,3 @@ class Model:
             
         input_hash = hashlib.sha256(input_pwd.encode()).hexdigest()
         return input_hash == self.data["password"]
-    
-    def generate_qr_data_url(self, ip_address):
-        if not ip_address:
-            return None
-            
-        url = f"http://{ip_address}:{self.port}"
-        
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(url)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Convert to base64 for Flet Image src
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        return f"data:image/png;base64,{img_str}"

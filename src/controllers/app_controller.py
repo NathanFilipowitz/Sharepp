@@ -13,6 +13,9 @@ import os
 import shutil
 import socket
 import tempfile
+import qrcode
+import io
+import base64
 from aiohttp import web
 from models.model import Model
 from pathlib import Path
@@ -254,3 +257,26 @@ class Controller:
             self.view.update_server_status(False)
             self.view.show_controls()
             self.log("Serveur fermé", "error")
+    def generate_qr_data_url(self, ip_address):
+        if not ip_address:
+            return None
+            
+        url = f"http://{ip_address}:{self.model.port}"
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64 for Flet Image src
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        
+        return f"data:image/png;base64,{img_str}"
