@@ -53,6 +53,7 @@ class Controller:
     def clear_path(self, e):
         self.model.set_path("")
         self.view.update_ui_for_path("")
+        self.view.page.update()
         self.log("Path cleared by user", "info")
     
     def update_password(self, value):
