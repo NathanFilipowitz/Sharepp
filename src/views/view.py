@@ -18,7 +18,7 @@ class View:
         
         self.file_picker = ft.FilePicker()
 
-        self.pick_button = ft.ElevatedButton("Ouvrir un dossier", icon=ft.Icons.FOLDER_OPEN, on_click=self.controller.pick_folder)
+        self.pick_button = ft.Button("Ouvrir un dossier", icon=ft.Icons.FOLDER_OPEN_ROUNDED, on_click=self.controller.pick_folder)
         
         self.result_text = ft.Text(
             "Aucun dossier n'a encore été sélectionné",
