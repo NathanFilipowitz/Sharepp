@@ -63,10 +63,12 @@ class Controller:
         self.model.toggle_logs()
         self.view.toggle_logs_visibility()
     
-    def toggle_protection(self):
+    def toggle_protection(self,e):
         self.model.toggle_protection()
-        status = "enabled" if self.model.data["is_protected"] else "disabled"
-        self.log(f"Protection {status}", "info")
+        e.control.checked = self.model.data["is_protected"]
+        self.view.page.update()
+        status = "activée" if self.model.data["is_protected"] else "désactivée"
+        self.log(f"Protection du partage {status}", "info")
     
     def get_local_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
