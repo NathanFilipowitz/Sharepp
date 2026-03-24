@@ -29,7 +29,9 @@ class Model:
             "password": "",
             "logs_visible": True,
             "qr_enabled": True,
-            "remember_path": True
+            "remember_path": True,
+            "copy_to_clipboard": False,
+            "context_menu_enabled": False
         }
         # Apply saved data
         self.load_settings()
@@ -74,6 +76,10 @@ class Model:
     @property
     def context_menu_enabled(self):
         return self.data["context_menu_enabled"]
+    
+    @property
+    def copy_to_clipboard(self):
+        return self.data["copy_to_clipboard"]
 
     # Set
     def set_path(self, path):
@@ -92,6 +98,7 @@ class Model:
             self.data["password"] = hashed_pwd
         self.save_settings()
     
+    # Togglers
     def toggle_protection(self):
         self.data["is_protected"] = not self.data["is_protected"]
         self.save_settings()
@@ -104,6 +111,13 @@ class Model:
         self.data["logs_visible"] = not self.data["logs_visible"]
         self.save_settings()
     
+    def toggle_context_menu(self):
+        self.data["context_menu_enabled"] = not self.data["context_menu_enabled"]
+        self.save_settings()
+    
+    def toggle_copy_clipboard(self):
+        self.data["copy_to_clipboard"] = not self.data["copy_to_clipboard"]
+        self.save_settings()
 
     def check_password(self, input_pwd):
         if not self.data["password"]:
