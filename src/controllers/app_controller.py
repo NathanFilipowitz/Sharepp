@@ -248,7 +248,7 @@ class Controller:
                 self.view.page.show_dialog(ft.SnackBar("Adresse copiée dans le presse-papier"))
 
             if self.model.qr_enabled:
-                qr_data = self.generate_qr_data_url(local_ip)
+                qr_data = self.generate_qr_data_url(url)
                 if qr_data:
                     self.view.show_qr_code(qr_data, url)
         
@@ -263,12 +263,10 @@ class Controller:
             self.view.update_server_status(False)
             self.view.show_controls()
             self.log("Serveur fermé", "error")
-    def generate_qr_data_url(self, ip_address):
-        if not ip_address:
+    def generate_qr_data_url(self, url):
+        if not url:
             return None
-            
-        url = f"http://{ip_address}:{self.model.port}"
-        
+
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
