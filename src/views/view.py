@@ -68,6 +68,7 @@ class View:
             size=14,
             weight=ft.FontWeight.W_500,
             color=ft.Colors.WHITE,
+            selectable=True
         )
         
         self.page.appbar = ft.AppBar(
@@ -204,7 +205,7 @@ class View:
 
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         
-        log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color)
+        log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color, selectable=True)
         self.logs_column.controls.append(log_text)
         self.page.update()
     
