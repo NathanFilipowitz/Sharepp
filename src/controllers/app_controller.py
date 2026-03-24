@@ -47,7 +47,7 @@ class Controller:
     
     def toggle_remember_path(self, e):
         self.model.toggle_remember_path()
-        e.control.checked = self.model.data["remember_path"]
+        e.control.checked = self.model.remember_path
         self.view.page.update()
     
     def clear_path(self, e):
@@ -97,6 +97,8 @@ class Controller:
                 event.control.page.update()
             except Exception as e:
                 print(f"Erreur registre : {e}")
+        event.control.checked = self.model.data["context_menu_enabled"]
+        self.view.page.update()
 
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     def _update_windows_registry(self, add_menu: bool):
@@ -227,7 +229,10 @@ class Controller:
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, '0.0.0.0', self.model.port)
-        await site.start()
+        try:
+            await site.start()
+        except error:
+            self.log(f"Erreur lors du lancement du serveur, vérifiez votre port {self.model.port}")
         
         self.model.server_runner = runner
         self.model.server_running = True
