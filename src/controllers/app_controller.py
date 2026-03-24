@@ -96,8 +96,6 @@ class Controller:
                 self._update_windows_registry(new_state)
                 self.model.data["context_menu_enabled"] = new_state
                 self.model.save_settings()
-                event.control.checked = new_state
-                event.control.page.update()
             except Exception as e:
                 print(f"Erreur registre : {e}")
         event.control.checked = self.model.data["context_menu_enabled"]
@@ -167,7 +165,7 @@ class Controller:
             # Password enabled or no auth header triggers browser popup
             return web.Response(
                 status=401,
-                headers={'WWW-Authenticate': 'Basic realm="Share++ (any username works)"'},
+                headers={'WWW-Authenticate': 'Basic realm="Share++ (ignore username field)"'},
                 text="Authentication required"
             )
 
@@ -177,7 +175,7 @@ class Controller:
             self.log(f"Nouvelle connexion de {request.remote}", "success")
             try:
                 files = os.listdir(self.model.selected_path)
-                # It uses the download_view to generate an HTML page with links to the files.
+                # It uses the download_view to generate the HTML page.
                 return web.Response(text=download_view.generate_html(files), content_type='text/html')
             except Exception as err:
                 self.log(f"Erreur serveur: {str(err)}", "error")
@@ -205,8 +203,8 @@ class Controller:
                     'Content-Disposition': f'attachment; filename="{filename}"',
                     'Content-Type': 'application/octet-stream'
                 })
-            # Check if the path is a folder, create a temporary
-            if requested_path.is_dir():
+            # Check if the path is a folder
+            if requested_path.is_dir() and str(requested_path).startswith(str(base_dir)):
                 # Create a temporary name for the folder (tmp) to then compress it before sending
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
                     zip_path = shutil.make_archive(tmp.name.replace('.zip', ''), 'zip', requested_path)
@@ -224,9 +222,9 @@ class Controller:
             return await require_auth(request, handle_download)
 
         app = web.Application()
-        # The route for the main page (e.g., http://localhost:8080/)
+        # The route for the main page (http://localhost:8080/)
         app.router.add_get('/', protected_index)
-        # The route for file downloads (e.g., http://localhost:8080/document.pdf)
+        # The route for file downloads (http://localhost:8080/document.pdf)
         app.router.add_get('/{filename}', protected_download)
 
         runner = web.AppRunner(app)
