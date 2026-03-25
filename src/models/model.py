@@ -6,12 +6,9 @@ Date:    2026-02-25
 Purpose: Handles json database for the app, and methods to interact with it for the controller.
 
 """
-import base64
 import hashlib
-import io
 import json
 import os
-import qrcode
 
 class Model:
     def __init__(self, config_path="settings.json"):
@@ -29,15 +26,17 @@ class Model:
             "password": "",
             "logs_visible": True,
             "qr_enabled": True,
-            "remember_path": True
+            "remember_path": True,
+            "copy_to_clipboard": False,
+            "context_menu_enabled": False
         }
         # Apply saved data
         self.load_settings()
     
-    # Load settings from settings.json if it exists
+    # Load settings from settings.json
     def load_settings(self):
         if os.path.exists(self.config_path):
-            with open(self.config_path, "r") as file:
+            with open(self.config_path) as file:
                 self.data.update(json.load(file))
         # Reset protection on every app launch
         self.data["is_protected"] = False
@@ -74,6 +73,10 @@ class Model:
     @property
     def context_menu_enabled(self):
         return self.data["context_menu_enabled"]
+    
+    @property
+    def copy_to_clipboard(self):
+        return self.data["copy_to_clipboard"]
 
     # Set
     def set_path(self, path):
@@ -92,6 +95,7 @@ class Model:
             self.data["password"] = hashed_pwd
         self.save_settings()
     
+    # Togglers
     def toggle_protection(self):
         self.data["is_protected"] = not self.data["is_protected"]
         self.save_settings()
@@ -104,6 +108,13 @@ class Model:
         self.data["logs_visible"] = not self.data["logs_visible"]
         self.save_settings()
     
+    def toggle_context_menu(self):
+        self.data["context_menu_enabled"] = not self.data["context_menu_enabled"]
+        self.save_settings()
+    
+    def toggle_copy_clipboard(self):
+        self.data["copy_to_clipboard"] = not self.data["copy_to_clipboard"]
+        self.save_settings()
 
     def check_password(self, input_pwd):
         if not self.data["password"]:
@@ -111,27 +122,3 @@ class Model:
             
         input_hash = hashlib.sha256(input_pwd.encode()).hexdigest()
         return input_hash == self.data["password"]
-    
-    def generate_qr_data_url(self, ip_address):
-        if not ip_address:
-            return None
-            
-        url = f"http://{ip_address}:{self.port}"
-        
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(url)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        
-        # Convert to base64 for Flet Image src
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        img_str = base64.b64encode(buffer.getvalue()).decode()
-        
-        return f"data:image/png;base64,{img_str}"

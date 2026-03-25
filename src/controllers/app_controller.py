@@ -13,6 +13,9 @@ import os
 import shutil
 import socket
 import tempfile
+import qrcode
+import io
+import base64
 from aiohttp import web
 from models.model import Model
 from pathlib import Path
@@ -44,12 +47,13 @@ class Controller:
     
     def toggle_remember_path(self, e):
         self.model.toggle_remember_path()
-        e.control.checked = self.model.data["remember_path"]
+        e.control.checked = self.model.remember_path
         self.view.page.update()
     
     def clear_path(self, e):
         self.model.set_path("")
         self.view.update_ui_for_path("")
+        self.view.page.update()
         self.log("Path cleared by user", "info")
     
     def update_password(self, value):
@@ -59,10 +63,12 @@ class Controller:
         self.model.toggle_logs()
         self.view.toggle_logs_visibility()
     
-    def toggle_protection(self):
+    def toggle_protection(self,e):
         self.model.toggle_protection()
-        status = "enabled" if self.model.data["is_protected"] else "disabled"
-        self.log(f"Protection {status}", "info")
+        e.control.checked = self.model.data["is_protected"]
+        self.view.page.update()
+        status = "activée" if self.model.data["is_protected"] else "désactivée"
+        self.log(f"Protection du partage {status}", "info")
     
     def get_local_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -75,6 +81,11 @@ class Controller:
             s.close()
         return ip
 
+    def toggle_copy_clipboard(self, event):
+        self.model.toggle_copy_clipboard()
+        event.control.checked = self.model.data["copy_to_clipboard"]
+        self.view.page.update()
+
     def toggle_context_menu(self, event):
         # reverse current state
         new_state = not self.model.data.get("context_menu_enabled", False)
@@ -85,10 +96,10 @@ class Controller:
                 self._update_windows_registry(new_state)
                 self.model.data["context_menu_enabled"] = new_state
                 self.model.save_settings()
-                event.control.checked = new_state
-                event.control.page.update()
             except Exception as e:
                 print(f"Erreur registre : {e}")
+        event.control.checked = self.model.data["context_menu_enabled"]
+        self.view.page.update()
 
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     def _update_windows_registry(self, add_menu: bool):
@@ -160,7 +171,7 @@ class Controller:
             # Password enabled or no auth header triggers browser popup
             return web.Response(
                 status=401,
-                headers={'WWW-Authenticate': 'Basic realm="Share++ (any username works)"'},
+                headers={'WWW-Authenticate': 'Basic realm="Share++ (ignore username field)"'},
                 text="Authentication required"
             )
 
@@ -170,7 +181,7 @@ class Controller:
             self.log(f"Nouvelle connexion de {request.remote}", "success")
             try:
                 files = os.listdir(self.model.selected_path)
-                # It uses the download_view to generate an HTML page with links to the files.
+                # It uses the download_view to generate the HTML page.
                 return web.Response(text=download_view.generate_html(files), content_type='text/html')
             except Exception as err:
                 self.log(f"Erreur serveur: {str(err)}", "error")
@@ -198,8 +209,8 @@ class Controller:
                     'Content-Disposition': f'attachment; filename="{filename}"',
                     'Content-Type': 'application/octet-stream'
                 })
-            # Check if the path is a folder, create a temporary
-            if requested_path.is_dir():
+            # Check if the path is a folder
+            if requested_path.is_dir() and str(requested_path).startswith(str(base_dir)):
                 # Create a temporary name for the folder (tmp) to then compress it before sending
                 with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
                     zip_path = shutil.make_archive(tmp.name.replace('.zip', ''), 'zip', requested_path)
@@ -217,27 +228,35 @@ class Controller:
             return await require_auth(request, handle_download)
 
         app = web.Application()
-        # The route for the main page (e.g., http://localhost:8080/)
+        # The route for the main page (http://localhost:8080/)
         app.router.add_get('/', protected_index)
-        # The route for file downloads (e.g., http://localhost:8080/document.pdf)
+        # The route for file downloads (http://localhost:8080/document.pdf)
         app.router.add_get('/{filename}', protected_download)
 
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, '0.0.0.0', self.model.port)
-        await site.start()
+        try:
+            await site.start()
+        except error:
+            self.log(f"Erreur lors du lancement du serveur, vérifiez votre port {self.model.port}")
         
         self.model.server_runner = runner
         self.model.server_running = True
         self.view.update_server_status(True)
 
-        # QR code generation
+        # Copy to clipboard & QR code generation
         local_ip = self.get_local_ip()
-        if local_ip and self.model.qr_enabled:
-            qr_data = self.model.generate_qr_data_url(local_ip)
-            if qr_data:
-                url_text = f"http://{local_ip}:{self.model.port}"
-                self.view.show_qr_code(qr_data, url_text)
+        if local_ip:
+            url = f"http://{local_ip}:{self.model.port}"
+            if self.model.copy_to_clipboard:
+                await ft.Clipboard().set(url)
+                self.view.page.show_dialog(ft.SnackBar("Adresse copiée dans le presse-papier"))
+
+            if self.model.qr_enabled:
+                qr_data = self.generate_qr_data_url(url)
+                if qr_data:
+                    self.view.show_qr_code(qr_data, url)
         
         self.log("Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)", "warning" if self.model.data["is_protected"] else "info")
         self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
@@ -250,3 +269,24 @@ class Controller:
             self.view.update_server_status(False)
             self.view.show_controls()
             self.log("Serveur fermé", "error")
+    def generate_qr_data_url(self, url):
+        if not url:
+            return None
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convert to base64 for Flet Image src
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        img_str = base64.b64encode(buffer.getvalue()).decode()
+        
+        return f"data:image/png;base64,{img_str}"

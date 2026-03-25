@@ -18,7 +18,7 @@ class View:
         
         self.file_picker = ft.FilePicker()
 
-        self.pick_button = ft.ElevatedButton("Ouvrir un dossier", icon=ft.Icons.FOLDER_OPEN, on_click=self.controller.pick_folder)
+        self.pick_button = ft.Button("Ouvrir un dossier", icon=ft.Icons.FOLDER_OPEN_ROUNDED, on_click=self.controller.pick_folder)
         
         self.result_text = ft.Text(
             "Aucun dossier n'a encore été sélectionné",
@@ -68,10 +68,11 @@ class View:
             size=14,
             weight=ft.FontWeight.W_500,
             color=ft.Colors.WHITE,
+            selectable=True
         )
         
         self.page.appbar = ft.AppBar(
-            leading=ft.Image(src="icons/app_icon.svg", color=ft.Colors.BLUE_200),
+            leading=ft.Image(src="icons/app_icon_compressed.svg"),
             leading_width=100,
             title=self.appbar_title,
             center_title=True,
@@ -88,15 +89,22 @@ class View:
                 ft.PopupMenuButton(
                     items=[
                         ft.PopupMenuItem(
-                            content="Remember Last Path", 
+                            content="Enregistrer le chemin", 
                             checked=self.controller.model.data["remember_path"],
                             on_click=self.controller.toggle_remember_path
                         ),
-                        ft.PopupMenuItem("Clear Saved Path", on_click=self.controller.clear_path),
                         ft.PopupMenuItem(
-                            content=ft.Text("Add to Context Menu"),
+                            content="Ajouter au menu contextuel",
                             checked=self.controller.model.data.get("context_menu_enabled", False),
                             on_click=self.controller.toggle_context_menu
+                        ),
+                        ft.PopupMenuItem(
+                            content="Clear l'adresse",
+                            on_click=self.controller.clear_path),
+                        ft.PopupMenuItem(
+                            content="Copier l'adresse automatiquement",
+                            checked=self.controller.model.data["copy_to_clipboard"],
+                            on_click=self.controller.toggle_copy_clipboard
                         )
                     ],
                     icon_color=ft.Colors.WHITE
@@ -196,7 +204,7 @@ class View:
 
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         
-        log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color)
+        log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color, selectable=True)
         self.logs_column.controls.append(log_text)
         self.page.update()
     
@@ -212,7 +220,7 @@ class View:
         self.page.update()
 
     def toggle_context_menu(self, e):
-        self.controller.model.toggle_context_menu()
+        self.controller.toggle_context_menu()
         e.control.selected = self.controller.model.data.context_menu_enabled
         self.page.update()
 
@@ -226,8 +234,10 @@ class View:
             self.pick_button.icon = ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED
         else:
             self.appbar_title.value = "SÉLECTIONNER UN DOSSIER"
+            self.result_text.value = f"Aucun dossier n'a encore été sélectionné"
             self.start_icon.visible = False
             self.stop_icon.visible = False
+            self.pick_button.icon = ft.Icons.FOLDER_OPEN_ROUNDED
         self.page.update()
 
     # Toggle the icons between start and stop, and turns the left Card unavailable whenever the server is started.
