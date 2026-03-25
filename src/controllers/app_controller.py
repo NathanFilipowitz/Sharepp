@@ -116,10 +116,16 @@ class Controller:
             # Create the command to open the app
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command") as key:
                 # AI Implementation of finding app path in system, universally
+                # if launching from .exe
+                if getattr(sys, 'frozen', False):
+                    # On est dans l'exécutable (.exe)
+                    launch_command = f'"{sys.executable}" "%1"'
                 # sys.executable = python.exe | sys.argv[0] = main.py
-                app_path = os.path.abspath(sys.argv[0])
-                # %1 represents the selected folder path (provided by windows)
-                winreg.SetValue(key, "", winreg.REG_SZ, f'"{sys.executable}" "{app_path}" "%1"')
+                else:
+                    app_path = os.path.abspath(sys.argv[0])
+                    # %1 represents the selected folder path (provided by windows)
+                    launch_command = f'"{sys.executable}" "{app_path}" "%1"'
+                winreg.SetValue(key, "", winreg.REG_SZ, launch_command)
         else:
             try:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
