@@ -9,10 +9,17 @@ Purpose: Handles json database for the app, and methods to interact with it for 
 import hashlib
 import json
 import os
+from pathlib import Path
 
 class Model:
-    def __init__(self, config_path="settings.json"):
-        self.config_path = config_path
+    def __init__(self, config_name="settings.json"):
+        # AI Modification to find config path after system installation
+        app_data_path = os.getenv('APPDATA')
+        self.config_dir = Path(app_data_path) / "SharePlusPlus"
+        # create folder if not exists
+        self.config_dir.mkdir(parents=True, exist_ok=True)
+
+        self.config_path = self.config_dir / config_name
 
         # Temporary data
         self.server_running = False
@@ -35,16 +42,23 @@ class Model:
     
     # Load settings from settings.json
     def load_settings(self):
-        if os.path.exists(self.config_path):
-            with open(self.config_path) as file:
-                self.data.update(json.load(file))
+        if self.config_path.exists():
+            try:
+                with open(self.config_path, "r", encoding="utf-8") as file:
+                    self.data.update(json.load(file))
+            except Exception as e:
+                print(f"Erreur lors du chargement des paramètres: {e}")
+
         # Reset protection on every app launch
         self.data["is_protected"] = False
                 
     # Write settings to json
     def save_settings(self):
-        with open(self.config_path, "w") as f:
-            json.dump(self.data, f, indent=4)
+        try:
+            with open(self.config_path, "w", encoding="utf-8") as file:
+                json.dump(self.data, file, indent=4)
+        except Exception as e:
+            print(f"Erreur lors de la sauvegarde: {e}")
     
 
     def toggle_remember_path(self):
