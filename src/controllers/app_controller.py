@@ -120,7 +120,7 @@ class Controller:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
             except WindowsError:
-                pass
+                self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
 
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e):
@@ -157,7 +157,7 @@ class Controller:
                 except Exception:
                     pass  # Invalid auth header
             
-            # Wrong password or no auth header triggers browser popup
+            # Password enabled or no auth header triggers browser popup
             return web.Response(
                 status=401,
                 headers={'WWW-Authenticate': 'Basic realm="Share++ (any username works)"'},
@@ -248,6 +248,5 @@ class Controller:
             self.model.server_runner = None
             self.model.server_running = False
             self.view.update_server_status(False)
-            self.view.update_ui_for_path("Serveur arrêté.")
             self.view.show_controls()
             self.log("Serveur fermé", "error")

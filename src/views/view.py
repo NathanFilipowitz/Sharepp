@@ -71,7 +71,7 @@ class View:
         )
         
         self.page.appbar = ft.AppBar(
-            leading=ft.Text("Share++", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+            leading=ft.Image(src="icons/app_icon.svg", color=ft.Colors.BLUE_200),
             leading_width=100,
             title=self.appbar_title,
             center_title=True,
@@ -223,6 +223,7 @@ class View:
             self.result_text.value = path
             self.start_icon.visible = not is_running
             self.stop_icon.visible = is_running
+            self.pick_button.icon = ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED
         else:
             self.appbar_title.value = "SÉLECTIONNER UN DOSSIER"
             self.start_icon.visible = False

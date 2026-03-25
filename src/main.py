@@ -29,4 +29,5 @@ def main(page: ft.Page):
             app.view.update_ui_for_path(folder_path)
             page.update()
 
-ft.run(main)
+# Give Flet access to static assets (app_icon)
+ft.run(main, assets_dir="assets")
