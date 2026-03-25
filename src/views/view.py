@@ -216,7 +216,7 @@ class View:
     def toggle_password_visibility(self, e):
         self.password_entry.visible = not self.password_entry.visible
         e.control.selected = self.password_entry.visible
-        self.controller.toggle_protection() 
+        self.controller.toggle_protection(e) 
         self.page.update()
 
     def toggle_context_menu(self, e):
@@ -248,8 +248,8 @@ class View:
         self.page.update()
     
     # Replace controls with QR code for the card content
-    def show_qr_code(self, qr_data_url, url_text):
-        self.qr_image.src = qr_data_url
+    def show_qr_code(self, qr_data, url_text):
+        self.qr_image.src = qr_data
         self.qr_url_text.value = url_text
         self.toggle_card.content.content = self.qr_content
         self.page.update()

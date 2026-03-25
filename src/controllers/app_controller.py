@@ -133,6 +133,7 @@ class Controller:
         if not self.model.selected_path:
             self.view.update_result("Veuillez d'abord sélectionner un dossier.")
             return
+        # Block starting a server if one is already running
         if self.model.server_running:
             return
 
@@ -175,7 +176,7 @@ class Controller:
             self.log(f"Nouvelle connexion de {request.remote}", "success")
             try:
                 files = os.listdir(self.model.selected_path)
-                # It uses the download_view to generate the HTML page.
+                # Uses the download_view to generate the HTML page.
                 return web.Response(text=download_view.generate_html(files), content_type='text/html')
             except Exception as err:
                 self.log(f"Erreur serveur: {str(err)}", "error")
@@ -213,7 +214,6 @@ class Controller:
                     })
             
             return web.Response(text="File not found", status=404)
-
 
         async def protected_index(request):
             return await require_auth(request, handle_index)
@@ -263,6 +263,7 @@ class Controller:
             self.view.update_server_status(False)
             self.view.show_controls()
             self.log("Serveur fermé", "error")
+
     def generate_qr_data_url(self, url):
         if not url:
             return None
