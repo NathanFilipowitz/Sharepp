@@ -60,7 +60,7 @@ class View:
         )
         
         # Left side content
-        self.path_text = ft.Text("/HOME/USER/FOLDER", weight=ft.FontWeight.BOLD, size=16)
+        self.path_text = ft.Text("", weight=ft.FontWeight.BOLD, size=16)
         
         # AppBar
         self.appbar_title = ft.Text(
@@ -99,7 +99,7 @@ class View:
                             on_click=self.controller.toggle_context_menu
                         ),
                         ft.PopupMenuItem(
-                            content="Clear l'adresse",
+                            content="Effacer l'adresse",
                             on_click=self.controller.clear_path),
                         ft.PopupMenuItem(
                             content="Copier l'adresse automatiquement",
@@ -157,7 +157,7 @@ class View:
             selectable=True
         )
         self.qr_content = ft.Column([
-            ft.Text("Scan to download", weight=ft.FontWeight.BOLD, size=16),
+            ft.Text("Scanner pour télécharger", weight=ft.FontWeight.BOLD, size=16),
             self.qr_image,
             self.qr_url_text
         ],
@@ -216,7 +216,7 @@ class View:
     def toggle_password_visibility(self, e):
         self.password_entry.visible = not self.password_entry.visible
         e.control.selected = self.password_entry.visible
-        self.controller.toggle_protection() 
+        self.controller.toggle_protection(e) 
         self.page.update()
 
     def toggle_context_menu(self, e):
@@ -227,7 +227,7 @@ class View:
     # Updates title and shows/hides server icons if a path was selected
     def update_ui_for_path(self, path, is_running=False):
         if path:
-            self.appbar_title.value = f"Path: {path}"
+            self.appbar_title.value = f"Chemin: {path}"
             self.result_text.value = path
             self.start_icon.visible = not is_running
             self.stop_icon.visible = is_running
