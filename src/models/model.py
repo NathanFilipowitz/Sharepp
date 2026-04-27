@@ -9,6 +9,7 @@ Purpose: Handles json database for the app, and methods to interact with it for 
 import hashlib
 import json
 import os
+import logging
 from pathlib import Path
 
 class Model:
@@ -39,7 +40,34 @@ class Model:
         }
         # Apply saved data
         self.load_settings()
+
+        # Persistent log file path
+        self.log_path = self.config_dir / "sharepp.log"
+        self._setup_file_logger()
     
+    def _setup_file_logger(self):
+        self.file_logger = logging.getLogger("sharepp")
+        # Accept logs of all severity levels (DEBUG == lowest priority)
+        self.file_logger.setLevel(logging.DEBUG)
+        
+        if not self.file_logger.handlers:
+            handler = logging.FileHandler(self.log_path, encoding="utf-8")
+            formatter = logging.Formatter(
+                "%(asctime)s [%(levelname)s] %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S"
+            )
+            handler.setFormatter(formatter)
+            self.file_logger.addHandler(handler)
+    
+    def log_to_file(self, message: str, level: str):
+        level_map = {
+            "success": logging.INFO,
+            "info":    logging.INFO,
+            "warning": logging.WARNING,
+            "error":   logging.ERROR,
+        }
+        self.file_logger.log(level_map.get(level, logging.INFO), message)
+
     # Load settings from settings.json
     def load_settings(self):
         if self.config_path.exists():
