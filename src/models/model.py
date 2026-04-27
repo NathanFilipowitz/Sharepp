@@ -52,12 +52,15 @@ class Model:
         self._setup_file_logger()
     
     def _setup_file_logger(self):
+        # Identify log file (create if not exists)
         self.file_logger = logging.getLogger("sharepp")
         # Accept logs of all severity levels (DEBUG == lowest priority)
         self.file_logger.setLevel(logging.DEBUG)
         
         if not self.file_logger.handlers:
-            handler = logging.FileHandler(self.log_path, encoding="utf-8")
+            handler = RotatingFileHandler(
+                self.log_path, maxBytes=1_000_000, backupCount=3, encoding="utf-8"
+            )
             formatter = logging.Formatter(
                 "%(asctime)s [%(levelname)s] %(message)s",
                 datefmt="%Y-%m-%d %H:%M:%S"
