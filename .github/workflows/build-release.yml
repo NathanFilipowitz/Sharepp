@@ -1,0 +1,68 @@
+# File:    build-release.yml
+# Date:    2026-04-20
+# Author:  Nathan Filipowitz
+# Desc:    Automatic build and release CD workflow
+
+
+name: Build & Release Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace "^v", ""
+          echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build with Flet
+        run: |
+          cd src
+          flet build windows --verbose
+          cd ..
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Update version in setup.iss
+        run: |
+          $content = Get-Content setup.iss -Raw
+          $content = $content -replace '#define MyAppVersion ".*?"', "#define MyAppVersion `"${{ env.VERSION }}`""
+          Set-Content setup.iss $content
+
+      - name: Build installer with Inno Setup
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
+
+      - name: Create GitHub Release and upload installer
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Share++ ${{ env.VERSION }}
+          body: |
+            ## Share++ v${{ env.VERSION }}
+            Installateur Windows pour Share++.
+            **Installation :** Téléchargez le fichier `.exe` ci-dessous et exécutez-le.
+          files: ./installer_output/SharePlusPlus_Setup_${{ env.VERSION }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
