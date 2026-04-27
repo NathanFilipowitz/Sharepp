@@ -30,6 +30,7 @@ class Controller:
     # Thread dedicated to rendering logs, because the aiohttp server runs on a different one than Flet's.
     # message: "success", "warning", "error", "info"
     def log(self, message: str, level: str):
+        self.model.log_to_file(message, level)
         # Use run_thread to call UI-updating methods from other threads
         self.view.page.run_thread(self.view.add_log_entry, message, level)
     
@@ -134,7 +135,7 @@ class Controller:
                 self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
 
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
-    async def start_server(self, e):
+    async def start_server(self, e=None):
         # Check that a path was selected and the server isn't already running
         if not self.model.selected_path:
             self.view.update_result("Veuillez d'abord sélectionner un dossier.")
@@ -238,7 +239,7 @@ class Controller:
         site = web.TCPSite(runner, '0.0.0.0', self.model.port)
         try:
             await site.start()
-        except error:
+        except Exception:
             self.log(f"Erreur lors du lancement du serveur, vérifiez votre port {self.model.port}")
         
         self.model.server_runner = runner
