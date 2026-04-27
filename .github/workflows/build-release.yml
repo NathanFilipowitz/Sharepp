@@ -37,6 +37,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build with Flet
+        env:
+          PYTHONUTF8: "1"
         run: |
           cd src
           flet build windows --verbose
