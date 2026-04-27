@@ -14,9 +14,15 @@ from pathlib import Path
 
 class Model:
     def __init__(self, config_name="settings.json"):
-        # AI Modification to find config path after system installation
-        app_data_path = os.getenv('APPDATA')
-        self.config_dir = Path(app_data_path) / "SharePlusPlus"
+        # Path.home is cross-platform
+        # Windows
+        if os.name == "nt":
+            # AI Modification to find config path after system installation
+            base_path = Path(os.getenv('APPDATA', Path.home()))
+        else:
+            base_path = Path.home() / ".config"
+
+        self.config_dir = base_path / "SharePlusPlus"
         # create folder if not exists
         self.config_dir.mkdir(parents=True, exist_ok=True)
 
