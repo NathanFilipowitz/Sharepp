@@ -45,6 +45,7 @@ jobs:
         env:
           PYTHONUTF8: "1"
         run: |
+          Copy-Item requirements.txt src\requirements.txt
           cd src
           flet build windows --verbose
           cd ..
