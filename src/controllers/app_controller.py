@@ -134,6 +134,34 @@ class Controller:
             except WindowsError:
                 self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
 
+    def parse_user_agent(self, ua: str):
+        if not ua:
+            return "Appareil inconnu"
+        
+        # Type d'appareil
+        if "Mobile" in ua or "Android" in ua:
+            device = "Mobile"
+        elif "Tablet" in ua or "iPad" in ua:
+            device = "Tablette"
+        else:
+            device = "PC"
+        
+        # Système d'exploitation
+        if "Android" in ua:
+            os_name = "Android"
+        elif "iPhone" in ua or "iPad" in ua:
+            os_name = "iOS"
+        elif "Windows" in ua:
+            os_name = "Windows"
+        elif "Linux" in ua:
+            os_name = "Linux"
+        elif "Mac" in ua:
+            os_name = "macOS"
+        else:
+            os_name = "OS inconnu"
+        
+        return f"{device} ({os_name})"
+
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e=None):
         # Check that a path was selected and the server isn't already running
@@ -180,7 +208,8 @@ class Controller:
 
         # First handler, handles serving the files from the selected path to the server. Calls the download_view file for rendering the front page
         async def handle_index(request):
-            self.log(f"Nouvelle connexion de {request.remote}", "success")
+            user_agent = self.parse_user_agent(request.headers.get('User-Agent', ''))
+            self.log(f"Connexion de {request.remote} [{user_agent}]", "success")
             try:
                 files = os.listdir(self.model.selected_path)
                 # Uses the download_view to generate the HTML page.
@@ -195,8 +224,8 @@ class Controller:
             filename = request.match_info.get('filename')
             if not filename:
                 return web.Response(text="Bad Request", status=400)
-
-            self.log(f"{request.remote} télécharge {filename}", "warning")
+            user_agent = self.parse_user_agent(request.headers.get('User-Agent', ''))
+            self.log(f"{request.remote} [{user_agent}] télécharge {filename}", "warning")
 
             # Security feature (AI Implemantation):
             # To prevent users from accessing files outside the shared folder (directory traversal attack),
