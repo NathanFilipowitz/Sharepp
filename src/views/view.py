@@ -10,6 +10,7 @@ Purpose: Handle frontend/User Interface for the application
 
 import flet as ft
 import datetime
+import sys
 
 class View:
     def __init__(self, page: ft.Page, controller):
@@ -121,6 +122,35 @@ class View:
             on_change=lambda e: self.controller.update_password(e.control.value)
         )
 
+        self.hotspot_ssid_field = ft.TextField(
+            label="Nom du réseau Wi-Fi (SSID)",
+            value=self.controller.model.hotspot_ssid,
+            prefix_icon=ft.Icons.WIFI,
+            width=200,
+            on_change=lambda e: self.controller.model.set_hotspot_credentials(
+                e.control.value, self.hotspot_password_field.value
+            ),
+        )
+
+        self.hotspot_password_field = ft.TextField(
+            label="Mot de passe hotspot",
+            value=self.controller.model.hotspot_password,
+            prefix_icon=ft.Icons.LOCK_OUTLINE,
+            password=True,
+            can_reveal_password=True,
+            width=200,
+            helper="Minimum 8 caractères (WPA2)",
+            on_change=lambda e: self.controller.model.set_hotspot_credentials(
+                self.hotspot_ssid_field.value, e.control.value
+            ),
+        )
+
+        self.hotspot_button = ft.Button(
+            content="Créer un hotspot Wi-Fi",
+            icon=ft.Icons.WIFI_TETHERING,
+            on_click=self.controller.toggle_hotspot,
+        )
+
         self.password_protect_control_chip = ft.Chip(
                 label=ft.Text("Protéger le partage"),
                 on_click=self.toggle_password_visibility,
@@ -142,6 +172,19 @@ class View:
         spacing=10,
         alignment=ft.MainAxisAlignment.CENTER
         )
+
+
+        # Hotspot card. Independant from control card
+        self.hotspot_controls_content = ft.Column([
+            ft.Text("Connectivité avancée", weight=ft.FontWeight.BOLD, size=13),
+            self.hotspot_ssid_field,
+            self.hotspot_password_field,
+            self.hotspot_button,
+        ],
+        spacing=10,
+        alignment=ft.MainAxisAlignment.CENTER
+        )
+
 
         # QR code content, starts hidden
         self.qr_image = ft.Image(
@@ -166,6 +209,57 @@ class View:
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
         )
 
+        self.wifi_qr_image = ft.Image(src=None, width=160, height=160, fit=ft.BoxFit.CONTAIN)
+        self.url_qr_image  = ft.Image(src=None, width=160, height=160, fit=ft.BoxFit.CONTAIN)
+
+        self.wifi_qr_label = ft.Text("", size=11, text_align=ft.TextAlign.CENTER, italic=True)
+        self.url_qr_label  = ft.Text("", size=11, text_align=ft.TextAlign.CENTER, selectable=True)
+
+        self.hotspot_step1 = ft.Text(
+            "1. Scanner ce QR pour se connecter",
+            weight=ft.FontWeight.BOLD, size=12, text_align=ft.TextAlign.CENTER
+        )
+        self.hotspot_step2 = ft.Text(
+            "2. Une fois connecté, scanner ce QR pour télécharger",
+            weight=ft.FontWeight.BOLD, size=12, text_align=ft.TextAlign.CENTER
+        )
+
+        self.hotspot_qr_content = ft.Column(
+            [
+                ft.Row(
+                    [
+                        ft.Column(
+                            [
+                                self.hotspot_step1,
+                                self.wifi_qr_image,
+                                self.wifi_qr_label,
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=4,
+                            expand=True,
+                        ),
+                        ft.VerticalDivider(width=1),
+                        ft.Column(
+                            [
+                                self.hotspot_step2,
+                                self.url_qr_image,
+                                self.url_qr_label,
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=4,
+                            expand=True,
+                        ),
+                    ],
+                    expand=True,
+                    spacing=8,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True,
+            spacing=6,
+        )
+
         # Main functionnalities Card (left column)
         self.toggle_card = ft.Card(
             content=ft.Container(
@@ -174,16 +268,35 @@ class View:
                 ink=True,
                 padding=20
             ),
-            height=400,
-            margin=20,
+            height=280,
+            margin=ft.margin.only(left=20, right=20, top=20, bottom=0),
             elevation=10,
             expand=True
+        )
+
+        self.hotspot_card = ft.Card(
+            content=ft.Container(
+                content=self.hotspot_controls_content,
+                alignment=ft.Alignment.CENTER,
+                ink=True,
+                padding=20
+            ),
+            height=220,
+            margin=ft.margin.only(left=20, right=20, top=8, bottom=20),
+            elevation=10,
+            expand=True
+        )
+
+        self.left_column = ft.Column(
+            [self.toggle_card, self.hotspot_card],
+            spacing=0,
+            expand=True,
         )
         
         # Main layout row
         self.main_row = ft.Row(
             [
-                self.toggle_card,
+                self.left_column,
                 self.logs_container,
             ],
             expand=True,
@@ -191,6 +304,11 @@ class View:
         )
         
         self.page.add(self.main_row)
+
+        # netsh is windows only, hide card if not on windows.
+        if sys.platform != "win32":
+            self.hotspot_card.visible = False
+            self.page.update()
     
     # View function to add a log to the logs container
     def add_log_entry(self, message, level):
@@ -253,9 +371,45 @@ class View:
         self.qr_url_text.value = url_text
         self.toggle_card.content.content = self.qr_content
         self.page.update()
-    
+
     # replace QR code with controls for the card content
     def show_controls(self):
         self.toggle_card.content.content = self.controls_content
+        self.hotspot_card.content.content = self.hotspot_controls_content
         self.qr_image.src = None
+        self.page.update()
+    
+    # Update hotspot creation button based on hotspot status
+    def update_hotspot_button(self, is_running):
+        if is_running:
+            self.hotspot_button.text = "Arrêter le point d'accès"
+            self.hotspot_button.icon = ft.Icons.WIFI_TETHERING_OFF
+            self.hotspot_button.style = ft.ButtonStyle(
+                bgcolor={ft.ControlState.DEFAULT: ft.Colors.RED_400},
+                color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
+            )
+        else:
+            self.hotspot_button.text = "Créer un point d'accès Wi-Fi"
+            self.hotspot_button.icon = ft.Icons.WIFI_TETHERING
+            self.hotspot_button.style = None
+        self.page.update()
+
+
+    def show_hotspot_qr_codes(self, wifi_qr_data, url_qr_data, ssid, password, download_url):
+        # QR Wi-Fi left
+        if wifi_qr_data:
+            self.wifi_qr_image.src = wifi_qr_data
+            self.wifi_qr_label.value = f"{ssid}\n(mdp : {password})"
+        else:
+            self.wifi_qr_label.value = f"Connectez-vous au Wi-Fi :\n{ssid}"
+
+        # QR URL right
+        if url_qr_data:
+            self.url_qr_image.src = url_qr_data
+            self.url_qr_label.value = download_url or ""
+        else:
+            self.url_qr_label.value = download_url or "Serveur non démarré"
+
+        # Replace qr card with both qr codes, toggle card isn't used so server stays independant
+        self.hotspot_card.content.content = self.hotspot_qr_content
         self.page.update()
