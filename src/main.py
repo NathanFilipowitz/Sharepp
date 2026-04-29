@@ -10,14 +10,26 @@ Purpose: Entry point for the application. It should just make calls to other fil
 import flet as ft
 import sys
 import os
+import ctypes
 from pathlib import Path
 from controllers.app_controller import Controller
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
 
 def main(page: ft.Page):
+    # Admin verification, user needs to be admin for Access Point feature to work
+    if os.name == 'nt' and not is_admin():
+        # Starts app in Administrator mode
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+        sys.exit(0)
     page.title = "Share++"
     app = Controller(page)
 
