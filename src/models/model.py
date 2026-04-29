@@ -42,7 +42,9 @@ class Model:
             "qr_enabled": True,
             "remember_path": True,
             "copy_to_clipboard": False,
-            "context_menu_enabled": False
+            "context_menu_enabled": False,
+            "hotspot_ssid": "SharePlusPlus",
+            "hotspot_password": "sharepp1",
         }
         # Apply saved data
         self.load_settings()
@@ -128,6 +130,14 @@ class Model:
     @property
     def copy_to_clipboard(self):
         return self.data["copy_to_clipboard"]
+    
+    @property
+    def hotspot_ssid(self):
+        return self.data.get("hotspot_ssid", "SharePlusPlus")
+
+    @property
+    def hotspot_password(self):
+        return self.data.get("hotspot_password", "sharepp1")
 
     # Set
     def set_path(self, path):
@@ -144,6 +154,14 @@ class Model:
         else:
             hashed_pwd = hashlib.sha256(pwd.encode()).hexdigest()
             self.data["password"] = hashed_pwd
+        self.save_settings()
+    
+    # Update SSID and password in user settings. password validation is done in hotspot_controller.setup_and_start
+    def set_hotspot_credentials(self, ssid, password):
+        if ssid:
+            self.data["hotspot_ssid"] = ssid
+        if password:
+            self.data["hotspot_password"] = password
         self.save_settings()
     
     # Togglers
