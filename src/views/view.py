@@ -28,19 +28,29 @@ class View:
             overflow=ft.TextOverflow.CLIP
         )
 
-        # Start/Stop Server icon initially hidden
-        self.start_icon = ft.IconButton(
+        # Start/Stop Server buttons initially hidden
+        self.start_button = ft.Button(
+            "Démarrer le partage",
             icon=ft.Icons.PLAY_ARROW_ROUNDED,
-            icon_color=ft.Colors.WHITE,
-            visible=False, 
+            visible=False,
             on_click=self.controller.start_server,
+            style=ft.ButtonStyle(
+                bgcolor={ft.ControlState.DEFAULT: ft.Colors.BLUE_400},
+                color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
+            ),
         )
-        self.stop_icon = ft.IconButton(
+        # Stop button shown under the QR code
+        self.stop_button_qr = ft.Button(
+            "Arrêter le partage",
             icon=ft.Icons.STOP_ROUNDED,
-            icon_color=ft.Colors.WHITE,
             visible=False,
             on_click=self.controller.stop_server,
+            style=ft.ButtonStyle(
+                bgcolor={ft.ControlState.DEFAULT: ft.Colors.RED_400},
+                color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
+            ),
         )
+
         
         # Logs panel (right side)
         self.logs_column = ft.Column(
@@ -79,8 +89,6 @@ class View:
             center_title=True,
             bgcolor=ft.Colors.BLUE_200,
             actions=[
-                self.start_icon,
-                self.stop_icon,
                 ft.IconButton(
                     icon=ft.Icons.CHAT_OUTLINED,
                     icon_color=ft.Colors.WHITE,
@@ -167,7 +175,8 @@ class View:
             ft.Container(
                 self.password_entry,
                 width=200,
-            )
+            ),
+            self.start_button,
         ],
         spacing=10,
         alignment=ft.MainAxisAlignment.CENTER
@@ -202,7 +211,8 @@ class View:
         self.qr_content = ft.Column([
             ft.Text("Scanner pour télécharger", weight=ft.FontWeight.BOLD, size=16),
             self.qr_image,
-            self.qr_url_text
+            self.qr_url_text,
+            self.stop_button_qr,
         ],
         spacing=10,
         alignment=ft.MainAxisAlignment.CENTER,
@@ -216,11 +226,11 @@ class View:
         self.url_qr_label  = ft.Text("", size=11, text_align=ft.TextAlign.CENTER, selectable=True)
 
         self.hotspot_step1 = ft.Text(
-            "1. Scanner ce QR pour se connecter",
+            "1. Scanner pour se connecter",
             weight=ft.FontWeight.BOLD, size=12, text_align=ft.TextAlign.CENTER
         )
         self.hotspot_step2 = ft.Text(
-            "2. Une fois connecté, scanner ce QR pour télécharger",
+            "2. Scanner pour télécharger",
             weight=ft.FontWeight.BOLD, size=12, text_align=ft.TextAlign.CENTER
         )
 
@@ -347,28 +357,30 @@ class View:
         if path:
             self.appbar_title.value = f"Chemin: {path}"
             self.result_text.value = path
-            self.start_icon.visible = not is_running
-            self.stop_icon.visible = is_running
+            self.start_button.visible = not is_running
             self.pick_button.icon = ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED
         else:
             self.appbar_title.value = "SÉLECTIONNER UN DOSSIER"
             self.result_text.value = f"Aucun dossier n'a encore été sélectionné"
-            self.start_icon.visible = False
-            self.stop_icon.visible = False
+            self.start_button.visible = False
             self.pick_button.icon = ft.Icons.FOLDER_OPEN_ROUNDED
         self.page.update()
 
     # Toggle the icons between start and stop, and turns the left Card unavailable whenever the server is started.
     def update_server_status(self, running):
-        self.start_icon.visible = not running
-        self.stop_icon.visible = running
-        self.toggle_card.disabled = running
+        self.start_button.visible = not running
+        self.stop_button_qr.visible = running
+        # Don't deactivate the entire card, just each widgets independently. Prevention to unclickable button when qr is shown
+        self.pick_button.disabled = running
+        self.password_protect_control_chip.disabled = running
+        self.toggle_card.disabled = False  # ne jamais disabled la card entière
         self.page.update()
     
     # Replace controls with QR code for the card content
     def show_qr_code(self, qr_data, url_text):
         self.qr_image.src = qr_data
         self.qr_url_text.value = url_text
+        self.stop_button_qr.visible = True
         self.toggle_card.content.content = self.qr_content
         self.page.update()
 
@@ -376,6 +388,8 @@ class View:
     def show_controls(self):
         self.toggle_card.content.content = self.controls_content
         self.hotspot_card.content.content = self.hotspot_controls_content
+        self.stop_button_qr.visible = False
+        self.start_button.visible = bool(self.controller.model.selected_path)
         self.qr_image.src = None
         self.page.update()
     
