@@ -41,16 +41,3 @@ def test_tu02_password_hashing(tmp_path):
     # wrong pw check
     assert model.check_password(password) is True
     assert model.check_password("falsePassword") is False
-
-# Tests qrcode generation and base64 encoding from url
-def test_tu03_qr_generation(tmp_path):
-    # Arrange
-    config_file = tmp_path / "test_temp_qr.json"
-    model = Model(config_path=str(config_file))
-
-    # Act
-    qr_base64 = model.generate_qr_data_url("192.168.1.10")
-    
-    # Assert
-    # check if image was created by it's header
-    assert qr_base64.startswith("data:image/png;base64,")

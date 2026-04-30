@@ -3,10 +3,10 @@ test_controller.py
 
 Author:  Nathan Filipowitz
 Date:    2026-03-09
-Purpose: Integration tests testing server behavior: file are showing, user cannot download other files by typing in URL, folder download generates zip.
+Purpose: Integration tests testing server behavior: files are showing, user cannot
+         download other files by typing in URL, folder download generates zip.
 
 """
-
 
 import pytest
 import pytest_asyncio
@@ -48,7 +48,17 @@ async def handle_download_mock(request):
 
     return web.Response(text="Not Found", status=404)
 
+# Unit tests
+# Tests qrcode generation and base64 encoding from url
+def test_tu03_qr_generation(tmp_path):
+    # Arrange
+    from controllers.app_controller import Controller
+    qr_base64 = Controller.generate_qr_data_url(None, "http://192.168.1.10:8080")
 
+    # Assert, check the image was created by its base64 header
+    assert qr_base64.startswith("data:image/png;base64,")
+
+# Integration tests
 # Arrange
 @pytest_asyncio.fixture
 async def browser_mock(aiohttp_client, tmp_path):
