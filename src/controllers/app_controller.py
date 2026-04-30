@@ -31,7 +31,7 @@ class Controller:
     
     # Thread dedicated to rendering logs, because the aiohttp server runs on a different one than Flet's.
     # message: "success", "warning", "error", "info"
-    def log(self, message: str, level: str):
+    def log(self, message, level):
         self.model.log_to_file(message, level)
         # Use run_thread to call UI-updating methods from other threads
         self.view.page.run_thread(self.view.add_log_entry, message, level)
