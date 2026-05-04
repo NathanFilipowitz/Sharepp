@@ -390,7 +390,8 @@ class View:
         self.hotspot_card.content.content = self.hotspot_controls_content
         self.stop_button_qr.visible = False
         self.start_button.visible = bool(self.controller.model.selected_path)
-        self.qr_image.src = None
+        self._primary_url = ""
+        self._secondary_url = ""
         self.page.update()
     
     # Update hotspot creation button based on hotspot status
