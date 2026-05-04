@@ -11,7 +11,6 @@ import sys
 import flet as ft
 import os
 import shutil
-import socket
 import tempfile
 import qrcode
 import io
@@ -20,6 +19,7 @@ import asyncio
 from aiohttp import web
 from models.model import Model
 from controllers import hotspot_controller
+from controllers import network_controller
 from pathlib import Path
 from views import download_view
 from views.view import View
@@ -72,17 +72,6 @@ class Controller:
         self.view.page.update()
         status = "activée" if self.model.data["is_protected"] else "désactivée"
         self.log(f"Protection du partage {status}", "info")
-    
-    def get_local_ip(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        try:
-            s.connect(('8.8.8.8', 80))
-            ip = s.getsockname()[0]
-        except Exception:
-            ip = None
-        finally:
-            s.close()
-        return ip
 
     def toggle_copy_clipboard(self, event):
         self.model.toggle_copy_clipboard()
@@ -277,19 +266,10 @@ class Controller:
         self.model.server_running = True
         self.view.update_server_status(True)
 
-        # Copy to clipboard & QR code generation
-        local_ip = self.get_local_ip()
-        if local_ip:
-            url = f"http://{local_ip}:{self.model.port}"
-            if self.model.copy_to_clipboard:
-                await ft.Clipboard().set(url)
-                self.view.page.show_dialog(ft.SnackBar("Adresse copiée dans le presse-papier"))
+        # Network scan
+        local_ip, overlay_ips = await asyncio.to_thread(self._detect_all_ips)
+        await self._show_connection_info(local_ip, overlay_ips)
 
-            if self.model.qr_enabled:
-                qr_data = self.generate_qr_data_url(url)
-                if qr_data:
-                    self.view.show_qr_code(qr_data, url)
-        
         self.log("Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)", "warning" if self.model.data["is_protected"] else "info")
         self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
     
@@ -359,7 +339,7 @@ class Controller:
         wifi_qr_data = self.generate_qr_data_url(wifi_string)
  
         # QR URL — ip locale au moment du demarrage
-        local_ip = self.get_local_ip()
+        local_ip = network_controller.get_local_ip()
         download_url = f"http://{local_ip}:{self.model.port}" if local_ip else None
         url_qr_data = self.generate_qr_data_url(download_url) if download_url else None
  
