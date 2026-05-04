@@ -362,21 +362,84 @@ class View:
         self.page.update()
 
 
-    def show_hotspot_qr_codes(self, wifi_qr_data, url_qr_data, ssid, password, download_url):
-        # QR Wi-Fi left
-        if wifi_qr_data:
-            self.wifi_qr_image.src = wifi_qr_data
-            self.wifi_qr_label.value = f"{ssid}\n(mdp : {password})"
-        else:
-            self.wifi_qr_label.value = f"Connectez-vous au Wi-Fi :\n{ssid}"
+    def show_hotspot_qr_codes(self, wifi_qr, url_qr, ssid, password, download_url):
+        async def _copy_url(e):
+            await ft.Clipboard().set(download_url)
+            self.page.show_dialog(ft.SnackBar(ft.Text("Adresse copiée !"), duration=1500))
+            self.page.update()
 
-        # QR URL right
-        if url_qr_data:
-            self.url_qr_image.src = url_qr_data
-            self.url_qr_label.value = download_url or ""
-        else:
-            self.url_qr_label.value = download_url or "Serveur non démarré"
-
-        # Replace qr card with both qr codes, toggle card isn't used so server stays independant
-        self.hotspot_card.content.content = self.hotspot_qr_content
+        self.hotspot_card.content.content = ft.Column(
+            [
+                # Stop Button. Always visible
+                ft.Container(
+                    ft.Button(
+                        "Arrêter le point d'accès",
+                        icon=ft.Icons.WIFI_TETHERING_OFF,
+                        on_click=self.controller.toggle_hotspot,
+                        style=ft.ButtonStyle(
+                            bgcolor={ft.ControlState.DEFAULT: ft.Colors.RED_400},
+                            color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
+                        ),
+                    ),
+                    alignment=ft.Alignment.CENTER,
+                    padding=8,
+                ),
+                ft.Divider(height=1),
+                # QR Wi-Fi, step 1, connect to Wi-Fi
+                ft.ExpansionTile(
+                    leading=ft.Icon(ft.Icons.WIFI_ROUNDED),
+                    title=ft.Text("1 · Se connecter au Wi-Fi", size=13),
+                    subtitle=ft.Text(f"{ssid}  ·  mdp : {password}", size=11),
+                    expanded=False,
+                    maintain_state=True,
+                    controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+                    controls=[
+                        ft.Column(
+                            [ft.Image(src=wifi_qr, width=180, height=180, fit=ft.BoxFit.CONTAIN)],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    ] if wifi_qr else [ft.Text("QR indisponible", italic=True, size=12)],
+                ),
+                # QR URL, step 2, download files
+                ft.ExpansionTile(
+                    leading=ft.Icon(ft.Icons.DOWNLOAD_ROUNDED),
+                    title=ft.Text("2 · Télécharger les fichiers", size=13),
+                    subtitle=ft.Row(
+                        [
+                            ft.Text(
+                                download_url or "Serveur non démarré",
+                                size=11,
+                                selectable=True,
+                                expand=True,
+                                overflow=ft.TextOverflow.ELLIPSIS,
+                            ),
+                            ft.IconButton(
+                                icon=ft.Icons.OPEN_IN_BROWSER_ROUNDED,
+                                tooltip="Ouvrir dans le navigateur",
+                                icon_size=16,
+                                on_click=lambda _: webbrowser.open(download_url) if download_url else None,
+                            ),
+                            ft.IconButton(
+                                icon=ft.Icons.COPY_ROUNDED,
+                                tooltip="Copier l'adresse",
+                                icon_size=16,
+                                on_click=_copy_url,
+                            ),
+                        ],
+                        spacing=0,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    expanded=False,
+                    maintain_state=True,
+                    controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+                    controls=[
+                        ft.Column(
+                            [ft.Image(src=url_qr, width=180, height=180, fit=ft.BoxFit.CONTAIN)],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        )
+                    ] if url_qr else [ft.Text("QR indisponible", italic=True, size=12)],
+                ),
+            ],
+            spacing=0,
+        )
         self.page.update()
