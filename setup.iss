@@ -14,6 +14,7 @@ AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\Share++
 DefaultGroupName=Share++
 UninstallDisplayIcon={app}\{#AppExeName}
+SetupIconFile=src\assets\icon_windows.ico
 Compression=lzma
 SolidCompression=yes
 OutputDir=installer_output
