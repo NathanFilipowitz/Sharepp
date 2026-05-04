@@ -118,6 +118,11 @@ class Controller:
                     # %1 represents the selected folder path (provided by windows)
                     launch_command = f'"{sys.executable}" "{app_path}" "%1"'
                 winreg.SetValue(key, "", winreg.REG_SZ, launch_command)
+
+            # Fix: fixed Working directory 
+            exe_dir = os.path.dirname(sys.executable)
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
+                winreg.SetValueEx(key, "WorkingDirectory", 0, winreg.REG_SZ, exe_dir)
         else:
             try:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
