@@ -355,3 +355,24 @@ class Controller:
         self.log(f"Hotspot : {msg}", level)
         self.view.update_hotspot_button(False)
         self.view.show_controls()
+    
+    def _detect_all_ips(self):
+        local_ip = network_controller.get_local_ip()
+        tailscale_ip = network_controller.get_tailscale_ip(self.model.port)
+        return local_ip, tailscale_ip
+
+
+    # Generate QR Codes and update UI based on available IPs.
+    async def _show_connection_info(self, local_ip, tailscale_ip):
+        local_url = f"http://{local_ip}:{self.model.port}" if local_ip else None
+        tailscale_url = f"http://{tailscale_ip}:{self.model.port}" if tailscale_ip else None
+
+        local_qr = self.generate_qr_data_url(local_url) if local_url else None
+        ts_qr = self.generate_qr_data_url(tailscale_url) if tailscale_url else None
+
+        if tailscale_url and local_qr and ts_qr:
+            self.view.show_dual_qr(local_qr, local_url, ts_qr, tailscale_url)
+            self.log(f"Tailscale détecté : {tailscale_url}", "success")
+        else:
+            self.view.show_qr_code(local_qr, local_url)
+    
