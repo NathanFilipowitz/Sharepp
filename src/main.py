@@ -7,9 +7,12 @@ Purpose: Entry point for the application. It should just make calls to other fil
 
 """
 
-import flet as ft
-import sys
 import os
+import sys
+# fix contextual menu: change current working directory based on application environment (packaged or development) before anything else
+if getattr(sys, 'frozen', False):
+    os.chdir(os.path.dirname(sys.executable))
+import flet as ft
 import ctypes
 from pathlib import Path
 from controllers.app_controller import Controller
