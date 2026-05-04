@@ -5,7 +5,7 @@
 #define AppName "Share++"
 #define AppVersion "1.0.0"
 #define AppPublisher "Nathan Filipowitz"
-#define AppExeName "src.exe"
+#define AppExeName "sharepp.exe"
 
 [Setup]
 AppName={#AppName}
