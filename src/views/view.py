@@ -302,10 +302,18 @@ class View:
     
     # Replace controls with QR code for the card content
     def show_qr_code(self, qr_data, url_text):
-        self.qr_image.src = qr_data
-        self.qr_url_text.value = url_text
+        self._primary_url = url_text
+        self._secondary_url = ""
         self.stop_button_qr.visible = True
-        self.toggle_card.content.content = self.qr_content
+
+        self.toggle_card.content.content = ft.Column(
+            [
+                ft.Container(self.stop_button_qr, alignment=ft.Alignment.CENTER, padding=8),
+                ft.Divider(height=1),
+                self._make_qr_expansion_tile("Réseau local", qr_data, url_text),
+            ],
+            spacing=0,
+        )
         self.page.update()
 
     # replace QR code with controls for the card content
