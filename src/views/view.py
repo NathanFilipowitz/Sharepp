@@ -11,6 +11,7 @@ Purpose: Handle frontend/User Interface for the application
 import flet as ft
 import datetime
 import sys
+import webbrowser
 
 class View:
     def __init__(self, page: ft.Page, controller):
@@ -50,6 +51,10 @@ class View:
                 color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
             ),
         )
+        
+        # Store used urls to show them later
+        self._primary_url = ""
+        self._secondary_url = ""  # Tailscale url
 
         
         # Logs panel (right side)
