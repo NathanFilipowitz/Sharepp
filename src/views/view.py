@@ -443,3 +443,45 @@ class View:
             spacing=0,
         )
         self.page.update()
+
+    def _make_qr_expansion_tile(self, title: str, qr_data: str, url: str) -> ft.ExpansionTile:
+        async def _copy(e, u=url):
+            await ft.Clipboard().set(u)
+            self.page.show_dialog(ft.SnackBar(ft.Text("Adresse copiée !"), duration=1500))
+            self.page.update()
+
+        return ft.ExpansionTile(
+            title=ft.Text(title, size=13),
+            subtitle=ft.Row(
+                [
+                    ft.Text(url, size=11, selectable=True, expand=True, overflow=ft.TextOverflow.ELLIPSIS),
+                    ft.IconButton(
+                        icon=ft.Icons.OPEN_IN_BROWSER_ROUNDED,
+                        tooltip="Ouvrir dans le navigateur",
+                        icon_size=16,
+                        on_click=lambda _, u=url: webbrowser.open(u),
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.COPY_ROUNDED,
+                        tooltip="Copier l'adresse",
+                        icon_size=16,
+                        on_click=_copy,
+                    ),
+                ],
+                spacing=0,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            leading=ft.Icon(ft.Icons.QR_CODE_ROUNDED),
+            expanded=False,
+            maintain_state=True,
+            controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+            controls=[
+                ft.Column(
+                    [
+                        ft.Image(src=qr_data, width=180, height=180, fit=ft.BoxFit.CONTAIN),
+                    ],
+                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=6,
+                ),
+            ],
+        )
