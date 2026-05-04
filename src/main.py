@@ -31,6 +31,12 @@ def main(page: ft.Page):
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
         sys.exit(0)
     page.title = "Share++"
+    # Taille de fenêtre compacte et fixe
+    page.window.width = 900
+    page.window.height = 560
+    page.window.min_width = 900
+    page.window.min_height = 560
+
     app = Controller(page)
 
     if len(sys.argv) > 1:
