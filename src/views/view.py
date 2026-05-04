@@ -315,7 +315,22 @@ class View:
             spacing=0,
         )
         self.page.update()
+    
+    def show_dual_qr(self, local_qr, local_url, ts_qr, ts_url):
+        self._primary_url = local_url
+        self._secondary_url = ts_url
+        self.stop_button_qr.visible = True
 
+        self.toggle_card.content.content = ft.Column(
+            [
+                ft.Container(self.stop_button_qr, alignment=ft.Alignment.CENTER, padding=8),
+                ft.Divider(height=1),
+                self._make_qr_expansion_tile("Réseau local", local_qr, local_url),
+                self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url),
+            ],
+            spacing=0,
+        )
+        self.page.update()
     # replace QR code with controls for the card content
     def show_controls(self):
         self.toggle_card.content.content = self.controls_content
