@@ -1,0 +1,29 @@
+[project]
+name = "sharepp"
+version = "1.0.0"
+description = "Partage de fichiers en réseau local"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Nathan Filipowitz" }]
+dependencies = [
+    "flet[all]",
+    "aiohttp",
+    "qrcode",
+    "Pillow",
+]
+
+[tool.flet]
+org = "com.nathanfilipowitz"
+product = "Share++"
+company = "Nathan Filipowitz"
+copyright = "Copyright © 2026 Nathan Filipowitz"
+
+[tool.flet.app]
+path = "src"
+
+[tool.flet.compile]
+app = true
+packages = true
+
+[tool.flet.windows]
+artifact = "sharepp"
