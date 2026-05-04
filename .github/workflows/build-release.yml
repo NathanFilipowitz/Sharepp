@@ -55,9 +55,10 @@ jobs:
 
       - name: Update version in setup.iss
         run: |
-          $content = Get-Content setup.iss -Raw
-          $content = $content -replace '#define AppVersion ".*?"', "#define AppVersion `"${{ env.VERSION }}`""
-          Set-Content setup.iss $content
+          $version = "${{ env.VERSION }}"
+          $content = Get-Content setup.iss -Raw -Encoding UTF8
+          $content = $content -replace '(#define AppVersion ")[^"]*(")', "`${1}$version`${2}"
+          Set-Content setup.iss $content -Encoding UTF8
 
       - name: Build installer with Inno Setup
         run: |
