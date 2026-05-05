@@ -28,3 +28,24 @@ Source: "src\build\windows\data\*"; DestDir: "{app}\data"; Flags: ignoreversion 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
+
+[Registry]
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; \
+  ValueType: expandsz; ValueName: "Path"; \
+  ValueData: "{olddata};{app}"; \
+  Check: NeedsAddPath(ExpandConstant('{app}'))
+
+[Code]
+function NeedsAddPath(Param: string): boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_LOCAL_MACHINE,
+    'SYSTEM\CurrentControlSet\Control\Session Manager\Environment',
+    'Path', OrigPath)
+  then begin
+    Result := True;
+    exit;
+  end;
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
+end;
