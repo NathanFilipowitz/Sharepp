@@ -13,6 +13,7 @@ import flet as ft
 import ctypes
 from pathlib import Path
 from controllers.app_controller import Controller
+from cli import run_cli
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
