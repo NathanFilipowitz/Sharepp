@@ -25,28 +25,33 @@ def is_admin():
 
 
 def main(page: ft.Page):
-    # Admin verification, user needs to be admin for Access Point feature to work
-    if os.name == 'nt' and not is_admin():
-        # Starts app in Administrator mode
-        args = " ".join(f'"{arg}"' for arg in sys.argv[1:])
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, args, None, 1)
+    if "--nogui" in sys.argv:
+        run_cli()
         sys.exit(0)
-    page.title = "Share++"
-    # Taille de fenêtre compacte et fixe
-    page.window.width = 900
-    page.window.height = 560
-    page.window.min_width = 900
-    page.window.min_height = 560
+    else:
+        # Admin verification, user needs to be admin for Access Point feature to work
+        if os.name == 'nt' and not is_admin():
+            # Starts app in Administrator mode
+            args = " ".join(f'"{arg}"' for arg in sys.argv[1:])
+            exe = sys.executable
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, args, os.path.dirname(exe), 1)
+            sys.exit(0)
+        page.title = "Share++"
+        # Taille de fenêtre compacte et fixe
+        page.window.width = 900
+        page.window.height = 560
+        page.window.min_width = 900
+        page.window.min_height = 560
 
-    app = Controller(page)
+        app = Controller(page)
 
-    if len(sys.argv) > 1:
-        folder_path = sys.argv[1]
-        if os.path.isdir(folder_path):
-            app.model.set_path(folder_path)
-            page.run_task(app.start_server, None)
-            app.view.update_ui_for_path(folder_path)
-            page.update()
+        if len(sys.argv) > 1:
+            folder_path = sys.argv[1]
+            if os.path.isdir(folder_path):
+                app.model.set_path(folder_path)
+                page.run_task(app.start_server, None)
+                app.view.update_ui_for_path(folder_path)
+                page.update()
 
-# Give Flet access to static assets (app_icon)
-ft.run(main, assets_dir="assets")
+    # Give Flet access to static assets (app_icon)
+    ft.run(main, assets_dir="assets")
