@@ -15,6 +15,7 @@ References:
 import re
 import socket
 import subprocess
+import platform
 
 # Try to establish a connection with the address. Adds a 3 seconds delay to the the UI but allows to hide Tailscale when not available
 def _is_reachable(ip, port, timeout: float = 3.0):
