@@ -119,7 +119,11 @@ class View:
                             content="Copier l'adresse automatiquement",
                             checked=self.controller.model.data["copy_to_clipboard"],
                             on_click=self.controller.toggle_copy_clipboard
-                        )
+                        ),
+                        ft.PopupMenuItem(
+                            content="Changer le port",
+                            on_click=self.controller.open_port_dialog
+                        ),
                     ],
                     icon_color=ft.Colors.WHITE
                 ),
