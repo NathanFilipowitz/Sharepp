@@ -76,12 +76,12 @@ def make_auth_middleware(password_hash: str):
 def make_handlers(shared_path, log_function):
     async def handle_index(request):
         device = parse_user_agent(request.headers.get("User-Agent", ""))
-        log_fn(f"Connexion de {request.remote} [{device}]", "success")
+        log_function(f"Connexion de {request.remote} [{device}]", "success")
         try:
             files = os.listdir(shared_path)
             return web.Response(text=generate_html(files), content_type="text/html")
         except Exception as e:
-            log_fn(f"Erreur lors de la lecture du répertoire : {e}", "error")
+            log_function(f"Erreur lors de la lecture du répertoire : {e}", "error")
             return web.Response(text=str(e), status=500)
 
     async def handle_download(request):
@@ -90,7 +90,7 @@ def make_handlers(shared_path, log_function):
             return web.Response(text="Bad Request", status=400)
  
         device = parse_user_agent(request.headers.get("User-Agent", ""))
-        log_fn(f"{request.remote} [{device}] télécharge '{filename}'", "warning")
+        log_function(f"{request.remote} [{device}] télécharge '{filename}'", "warning")
  
         # anti directory traversal protection :
         # make path absolute and compare requested filename to match absolute path
@@ -98,7 +98,7 @@ def make_handlers(shared_path, log_function):
         requested = (base_dir / filename).resolve()
  
         if not str(requested).startswith(str(base_dir)):
-            log_fn(f"Traversée de répertoire bloquée : {filename}", "error")
+            log_function(f"Traversée de répertoire bloquée : {filename}", "error")
             return web.Response(text="Accès refusé", status=403)
  
         if requested.is_file():
@@ -117,7 +117,7 @@ def make_handlers(shared_path, log_function):
                     "Content-Disposition": f'attachment; filename="{filename}.zip"',
                 })
             except Exception as e:
-                log_fn(f"Erreur lors de la compression de '{filename}' : {e}", "error")
+                log_function(f"Erreur lors de la compression de '{filename}' : {e}", "error")
                 return web.Response(text="Erreur lors de la création du zip", status=500)
  
         return web.Response(text="Fichier introuvable", status=404)
