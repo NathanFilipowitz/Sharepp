@@ -16,8 +16,8 @@ import re
 import socket
 import subprocess
 
-# Try to establish a connection with the address. Adds a 2 second delay to the the UI but allows to hide Tailscale when not available
-def _is_reachable(ip, port, timeout: float = 2.0):
+# Try to establish a connection with the address. Adds a 3 seconds delay to the the UI but allows to hide Tailscale when not available
+def _is_reachable(ip, port, timeout: float = 3.0):
     try:
         with socket.create_connection((ip, port), timeout=timeout):
             return True
@@ -26,16 +26,25 @@ def _is_reachable(ip, port, timeout: float = 2.0):
 
 
 def _detect_tailscale_ip():
-    # Run Tailscale CLI command and read output
+    # Is tailscale active: "tailscale status" output
     try:
+        status = subprocess.run(
+            ["tailscale", "status"],
+            capture_output=True, text=True, timeout=3
+        )
+        if status.returncode != 0:
+            return None
+
+        # get tailscale ip for this machine in IPv4
         result = subprocess.run(
             ["tailscale", "ip", "--4"],
             capture_output=True, text=True, timeout=3
         )
         ip = result.stdout.strip()
-        if ip and re.match(r"^100\.\d+\.\d+\.\d+$", ip):
+        if ip and re.match(r"^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\.\d{1,3}\.\d{1,3}$", ip):
             return ip
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+
+    except Exception:
         pass
 
     return None
@@ -59,3 +68,19 @@ def get_local_ip():
         return None
     finally:
         s.close()
+
+# Get hotspot ip if it exists, else returns None
+def get_hotspot_ip():
+    if platform.system() != "Windows":
+        return None
+    try:
+        # Retrieve all ip adresses, created ip seems to always start with 192.168.137.xx
+        hostname = socket.gethostname()
+        all_ips = socket.getaddrinfo(hostname, None, socket.AF_INET)
+        for info in all_ips:
+            ip = info[4][0]
+            if ip.startswith("192.168.137."):
+                return ip
+    except Exception as e:
+        print(f"Erreur lors de la réception de l'adresse IP du hotspot: {e}")
+    return None
