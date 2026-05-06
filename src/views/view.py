@@ -139,39 +139,26 @@ class View:
             on_change=lambda e: self.controller.update_password(e.control.value)
         )
 
-        self.hotspot_ssid_field = ft.TextField(
-            label="Nom du réseau Wi-Fi (SSID)",
-            value=self.controller.model.hotspot_ssid,
-            prefix_icon=ft.Icons.WIFI,
-            width=200,
-            on_change=lambda e: self.controller.model.set_hotspot_credentials(
-                e.control.value, self.hotspot_password_field.value
-            ),
-        )
-
-        self.hotspot_password_field = ft.TextField(
-            label="Mot de passe hotspot",
-            value=self.controller.model.hotspot_password,
-            prefix_icon=ft.Icons.LOCK_OUTLINE,
-            password=True,
-            can_reveal_password=True,
-            width=200,
-            helper="Minimum 8 caractères (WPA2)",
-            on_change=lambda e: self.controller.model.set_hotspot_credentials(
-                self.hotspot_ssid_field.value, e.control.value
-            ),
-        )
-
-        self.hotspot_button = ft.Button(
-            content="Créer un hotspot Wi-Fi",
-            icon=ft.Icons.WIFI_TETHERING,
-            on_click=self.controller.toggle_hotspot,
-        )
-
         self.password_protect_control_chip = ft.Chip(
                 label=ft.Text("Protéger le partage"),
                 on_click=self.toggle_password_visibility,
             )
+
+        self.hotspot_chip = ft.Chip(
+            label=ft.Text("Créer un point d'accès Wi-Fi au démarrage"),
+            on_click=self._toggle_hotspot_enabled,
+            selected=self.controller.model.data.get("hotspot_enabled", False),
+            # Grisé si pas Windows — affiché mais non cliquable
+            disabled=sys.platform != "win32",
+            tooltip="Nécessite Windows et une carte Wi-Fi compatible" if sys.platform != "win32" else "",
+        )
+
+        self.hotspot_config_button = ft.TextButton(
+            "Configurer le réseau Wi-Fi",
+            icon=ft.Icons.SETTINGS_OUTLINED,
+            on_click=self.controller.open_hotspot_config_dialog,
+            disabled=sys.platform != "win32",
+        )
 
         self.controls_content = ft.Column([
             self.pick_button,
@@ -185,19 +172,10 @@ class View:
                 self.password_entry,
                 width=200,
             ),
+            ft.Divider(height=8),
+            self.hotspot_chip,
+            self.hotspot_config_button,
             self.start_button,
-        ],
-        spacing=10,
-        alignment=ft.MainAxisAlignment.CENTER
-        )
-
-
-        # Hotspot card. Independant from control card
-        self.hotspot_controls_content = ft.Column([
-            ft.Text("Connectivité avancée", weight=ft.FontWeight.BOLD, size=13),
-            self.hotspot_ssid_field,
-            self.hotspot_password_field,
-            self.hotspot_button,
         ],
         spacing=10,
         alignment=ft.MainAxisAlignment.CENTER
@@ -217,21 +195,24 @@ class View:
             expand=True
         )
 
-        self.hotspot_card = ft.Card(
-            content=ft.Container(
-                content=self.hotspot_controls_content,
-                alignment=ft.Alignment.CENTER,
-                ink=True,
-                padding=20
-            ),
-            height=220,
-            margin=ft.margin.only(left=20, right=20, top=8, bottom=20),
-            elevation=10,
-            expand=True
+        self.hotspot_chip = ft.Chip(
+            label=ft.Text("Créer un point d'accès Wi-Fi au démarrage"),
+            on_click=self._toggle_hotspot_enabled,
+            selected=self.controller.model.data.get("hotspot_enabled", False),
+            # Grisé si pas Windows — affiché mais non cliquable
+            disabled=sys.platform != "win32",
+            tooltip="Nécessite Windows et une carte Wi-Fi compatible" if sys.platform != "win32" else "",
+        )
+
+        self.hotspot_config_button = ft.TextButton(
+            "Configurer le réseau Wi-Fi",
+            icon=ft.Icons.SETTINGS_OUTLINED,
+            on_click=self.controller.open_hotspot_config_dialog,
+            disabled=sys.platform != "win32",
         )
 
         self.left_column = ft.Column(
-            [self.toggle_card, self.hotspot_card],
+            [self.toggle_card],
             spacing=0,
             expand=True,
         )
@@ -247,11 +228,6 @@ class View:
         )
         
         self.page.add(self.main_row)
-
-        # netsh is windows only, hide card if not on windows.
-        if sys.platform != "win32":
-            self.hotspot_card.visible = False
-            self.page.update()
     
     # View function to add a log to the logs container
     def add_log_entry(self, message, level):
@@ -267,6 +243,8 @@ class View:
         
         log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color, selectable=True)
         self.logs_column.controls.append(log_text)
+        # Auto scroll to always see the latest logs
+        self.logs_column.scroll_to(offset=-1, duration=100)
         self.page.update()
     
     def toggle_logs_visibility(self):
@@ -309,41 +287,59 @@ class View:
         self.toggle_card.disabled = False  # ne jamais disabled la card entière
         self.page.update()
     
-    # Replace controls with QR code for the card content
-    def show_qr_code(self, qr_data, url_text):
-        self._primary_url = url_text
-        self._secondary_url = ""
+    def _toggle_hotspot_enabled(self, e):
+        self.controller.model.toggle_hotspot_enabled()
+        e.control.selected = self.controller.model.data["hotspot_enabled"]
+        self.page.update()
+
+    def show_connection_tiles(self, local_qr, local_url, ts_qr, ts_url, hotspot_qr, hotspot_url):
+        self._primary_url   = local_url   or ""
+        self._secondary_url = ts_url      or ""
         self.stop_button_qr.visible = True
 
-        self.toggle_card.content.content = ft.Column(
-            [
-                ft.Container(self.stop_button_qr, alignment=ft.Alignment.CENTER, padding=8),
-                ft.Divider(height=1),
-                self._make_qr_expansion_tile("Réseau local", qr_data, url_text),
-            ],
-            spacing=0,
-        )
-        self.page.update()
-    
-    def show_dual_qr(self, local_qr, local_url, ts_qr, ts_url):
-        self._primary_url = local_url
-        self._secondary_url = ts_url
-        self.stop_button_qr.visible = True
+        tiles = [
+            ft.Container(self.stop_button_qr, alignment=ft.Alignment.CENTER, padding=8),
+            ft.Divider(height=1),
+        ]
 
-        self.toggle_card.content.content = ft.Column(
-            [
-                ft.Container(self.stop_button_qr, alignment=ft.Alignment.CENTER, padding=8),
-                ft.Divider(height=1),
-                self._make_qr_expansion_tile("Réseau local", local_qr, local_url),
-                self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url),
-            ],
-            spacing=0,
-        )
+        # Card d'instruction hotspot — visible uniquement si le hotspot est actif
+        if hotspot_url:
+            tiles.append(
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.WIFI_TETHERING, color=ft.Colors.BLUE_400, size=18),
+                        ft.Text(
+                            "Connectez-vous d'abord au Wi-Fi Share++ puis scannez l'URL ci-dessous",
+                            size=11,
+                            italic=True,
+                            expand=True,
+                        ),
+                    ], spacing=8),
+                    bgcolor=ft.Colors.BLUE_50,
+                    border_radius=8,
+                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                    margin=ft.margin.symmetric(horizontal=8),
+                )
+            )
+
+        # ExpansionTiles dans l'ordre : LAN, Hotspot, Tailscale
+        if local_url:
+            tiles.append(self._make_qr_expansion_tile("Réseau local", local_qr, local_url))
+        if hotspot_url:
+            tiles.append(self._make_qr_expansion_tile(
+                "Point d'accès Wi-Fi (192.168.137.x)", hotspot_qr, hotspot_url,
+                icon=ft.Icons.WIFI_TETHERING
+            ))
+        if ts_url:
+            tiles.append(self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url))
+
+        self.toggle_card.content.content = ft.Column(tiles, spacing=0)
         self.page.update()
+        
     # replace QR code with controls for the card content
     def show_controls(self):
         self.toggle_card.content.content = self.controls_content
-        self.hotspot_card.content.content = self.hotspot_controls_content
+        # self.hotspot_card.content.content = self.hotspot_controls_content
         self.stop_button_qr.visible = False
         self.start_button.visible = bool(self.controller.model.selected_path)
         self._primary_url = ""
@@ -448,7 +444,7 @@ class View:
         )
         self.page.update()
 
-    def _make_qr_expansion_tile(self, title: str, qr_data: str, url: str) -> ft.ExpansionTile:
+    def _make_qr_expansion_tile(self, title, qr_data, url, icon=ft.Icons.QR_CODE_ROUNDED):
         async def _copy(e, u=url):
             await ft.Clipboard().set(u)
             self.page.show_dialog(ft.SnackBar(ft.Text("Adresse copiée !"), duration=1500))
@@ -475,7 +471,7 @@ class View:
                 spacing=0,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            leading=ft.Icon(ft.Icons.QR_CODE_ROUNDED),
+            leading=ft.Icon(icon),
             expanded=False,
             maintain_state=True,
             controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
