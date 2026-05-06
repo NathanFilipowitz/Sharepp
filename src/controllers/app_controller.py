@@ -20,6 +20,7 @@ from aiohttp import web
 from models.model import Model
 from controllers import hotspot_controller
 from controllers import network_controller
+from controllers.server_controller import build_app, parse_user_agent
 from pathlib import Path
 from views import download_view
 from views.view import View
@@ -47,6 +48,41 @@ class Controller:
             self.model.set_path(e.path)
             self.view.update_ui_for_path(e.path)
             self.log(f"Dossier sélectionné : {e.path}", "info")
+    
+    def open_port_dialog(self, e):
+        port_field = ft.TextField(
+            label="Port",
+            value=str(self.model.port),
+            keyboard_type=ft.KeyboardType.NUMBER,
+            width=150,
+        )
+
+        def save_port(e):
+            try:
+                new_port = int(port_field.value)
+                if 1024 <= new_port <= 65535:
+                    self.model.set_port(new_port)   # set_port() sauvegarde dans settings.json
+                    self.log(f"Port changé : {new_port}", "info")
+                    dialog.open = False
+                    self.view.page.update()
+                else:
+                    port_field.error_text = "Entre 1024 et 65535"
+                    self.view.page.update()
+            except ValueError:
+                port_field.error_text = "Nombre invalide"
+                self.view.page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Changer le port"),
+            content=port_field,
+            actions=[
+                ft.TextButton("Annuler", on_click=lambda e: setattr(dialog, 'open', False) or self.view.page.update()),
+                ft.TextButton("Enregistrer", on_click=save_port),
+            ],
+        )
+        self.view.page.overlay.append(dialog)
+        dialog.open = True
+        self.view.page.update()
     
     def toggle_remember_path(self, e):
         self.model.toggle_remember_path()
@@ -119,7 +155,7 @@ class Controller:
                     launch_command = f'"{sys.executable}" "{app_path}" "%1"'
                 winreg.SetValue(key, "", winreg.REG_SZ, launch_command)
 
-            # Fix: fixed Working directory 
+            # Fix: fixed Contextual menu crash by setting Working Directory on startup (AI recommendation: Gemini)
             exe_dir = os.path.dirname(sys.executable)
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
                 winreg.SetValueEx(key, "WorkingDirectory", 0, winreg.REG_SZ, exe_dir)
@@ -130,152 +166,39 @@ class Controller:
             except WindowsError:
                 self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
 
-    def parse_user_agent(self, ua: str):
-        if not ua:
-            return "Appareil inconnu"
-        
-        # Type d'appareil
-        if "Mobile" in ua or "Android" in ua:
-            device = "Mobile"
-        elif "Tablet" in ua or "iPad" in ua:
-            device = "Tablette"
-        else:
-            device = "PC"
-        
-        # Système d'exploitation
-        if "Android" in ua:
-            os_name = "Android"
-        elif "iPhone" in ua or "iPad" in ua:
-            os_name = "iOS"
-        elif "Windows" in ua:
-            os_name = "Windows"
-        elif "Linux" in ua:
-            os_name = "Linux"
-        elif "Mac" in ua:
-            os_name = "macOS"
-        else:
-            os_name = "OS inconnu"
-        
-        return f"{device} ({os_name})"
-
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e=None):
-        # Check that a path was selected and the server isn't already running
         if not self.model.selected_path:
             self.view.update_result("Veuillez d'abord sélectionner un dossier.")
             return
-        # Block starting a server if one is already running
         if self.model.server_running:
             return
 
-        async def require_auth(request, handler):
-            # Skip auth if protection disabled
-            if not self.model.data["is_protected"]:
-                return await handler(request)
-                
-            # No password set = allow all
-            if not self.model.data["password"]:
-                return await handler(request)
-            
-            # Check for Authorization header
-            auth_header = request.headers.get('Authorization', '')
-            
-            if auth_header.startswith('Basic '):
-                import base64
-                # Decode "user:password" from base64
-                try:
-                    encoded = auth_header[6:]  # Remove "Basic "
-                    decoded = base64.b64decode(encoded).decode('utf-8')
-                    # Format is "username:password", we only care about password
-                    _, password = decoded.split(':', 1)
-                    
-                    if self.model.check_password(password):
-                        return await handler(request)
-                except Exception:
-                    pass  # Invalid auth header
-            
-            # Password enabled or no auth header triggers browser popup
-            return web.Response(
-                status=401,
-                headers={'WWW-Authenticate': 'Basic realm="Share++ (ignore username field)"'},
-                text="Authentication required"
-            )
+        # Récupère le hash du mot de passe si la protection est active
+        password_hash = self.model.data["password"] if self.model.data["is_protected"] else ""
 
-
-        # First handler, handles serving the files from the selected path to the server. Calls the download_view file for rendering the front page
-        async def handle_index(request):
-            user_agent = self.parse_user_agent(request.headers.get('User-Agent', ''))
-            self.log(f"Connexion de {request.remote} [{user_agent}]", "success")
-            try:
-                files = os.listdir(self.model.selected_path)
-                # Uses the download_view to generate the HTML page.
-                return web.Response(text=download_view.generate_html(files), content_type='text/html')
-            except Exception as err:
-                self.log(f"Erreur serveur: {str(err)}", "error")
-                return web.Response(text=str(err), status=500)
-
-        # Second handler, serves a specific file when the user clicks on one.
-        async def handle_download(request):
-            # sorts the request to only get the filename
-            filename = request.match_info.get('filename')
-            if not filename:
-                return web.Response(text="Bad Request", status=400)
-            user_agent = self.parse_user_agent(request.headers.get('User-Agent', ''))
-            self.log(f"{request.remote} [{user_agent}] télécharge {filename}", "warning")
-
-            # Security feature (AI Implemantation):
-            # To prevent users from accessing files outside the shared folder (directory traversal attack),
-            # we build a full, absolute path and verify it's still inside the shared folder.
-            base_dir = Path(self.model.selected_path).resolve()
-            requested_path = (base_dir / filename).resolve()
-
-            # Check if the path is a file and is within the allowed directory
-            if requested_path.is_file() and str(requested_path).startswith(str(base_dir)):
-                # Add a header to the response so the downloaded file doesn't just open in the browser
-                return web.FileResponse(requested_path, headers={
-                    'Content-Disposition': f'attachment; filename="{filename}"',
-                    'Content-Type': 'application/octet-stream'
-                })
-            # Check if the path is a folder
-            if requested_path.is_dir() and str(requested_path).startswith(str(base_dir)):
-                # Create a temporary name for the folder (tmp) to then compress it before sending
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
-                    zip_path = shutil.make_archive(tmp.name.replace('.zip', ''), 'zip', requested_path)
-                    return web.FileResponse(zip_path, headers={
-                        'Content-Disposition': f'attachment; filename="{filename}.zip"'
-                    })
-            
-            return web.Response(text="File not found", status=404)
-
-        async def protected_index(request):
-            return await require_auth(request, handle_index)
-        
-        async def protected_download(request):
-            return await require_auth(request, handle_download)
-
-        app = web.Application()
-        # The route for the main page (http://localhost:8080/)
-        app.router.add_get('/', protected_index)
-        # The route for file downloads (http://localhost:8080/document.pdf)
-        app.router.add_get('/{filename}', protected_download)
+        # build_app reçoit self.log comme fonction de logging
+        # self.log écrit à la fois dans le fichier et dans l'UI Flet
+        app = build_app(self.model.selected_path, password_hash, self.log)
 
         runner = web.AppRunner(app)
         await runner.setup()
         site = web.TCPSite(runner, '0.0.0.0', self.model.port)
         try:
             await site.start()
-        except Exception:
-            self.log(f"Erreur lors du lancement du serveur, vérifiez votre port {self.model.port}")
-        
+        except Exception as e:
+            self.log(f"Erreur lors du lancement du serveur sur le port {self.model.port} : {e}", "error")
+            return
+
         self.model.server_runner = runner
         self.model.server_running = True
         self.view.update_server_status(True)
 
-        # Network scan
         local_ip, overlay_ips = await asyncio.to_thread(self._detect_all_ips)
         await self._show_connection_info(local_ip, overlay_ips)
 
-        self.log("Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)", "warning" if self.model.data["is_protected"] else "info")
+        status = "Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)"
+        self.log(status, "warning" if self.model.data["is_protected"] else "info")
         self.log(f"Serveur ouvert sur le port {self.model.port}", "info")
     
     async def stop_server(self, e):

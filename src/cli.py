@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 from aiohttp import web
 from controllers import network_controller
-from controllers.server import build_app
+from controllers.server_controller import build_app
 
 COLORS = {
     "info":    "\033[0m",
