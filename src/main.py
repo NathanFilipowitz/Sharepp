@@ -9,11 +9,8 @@ Purpose: Entry point for the application. It should just make calls to other fil
 
 import os
 import sys
-import flet as ft
 import ctypes
 from pathlib import Path
-from controllers.app_controller import Controller
-from cli import run_cli
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -24,21 +21,25 @@ def is_admin():
     except:
         return False
 
-
-def main(page: ft.Page):
-    if "--nogui" in sys.argv:
-        run_cli()
+if "--nogui" in sys.argv:
+    from cli import run_cli
+    run_cli()
+else:
+    # Start GUI app in administrator mode for exectuing netsh commands
+    if os.name == 'nt' and not is_admin():
+        args = " ".join(f'"{a}"' for a in sys.argv[1:])
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, args,
+            os.path.dirname(sys.executable),  # WorkingDirectory explicite
+            1
+        )
         sys.exit(0)
-    else:
-        # Admin verification, user needs to be admin for Access Point feature to work
-        if os.name == 'nt' and not is_admin():
-            # Starts app in Administrator mode
-            args = " ".join(f'"{arg}"' for arg in sys.argv[1:])
-            exe = sys.executable
-            ctypes.windll.shell32.ShellExecuteW(None, "runas", exe, args, os.path.dirname(exe), 1)
-            sys.exit(0)
+
+    import flet as ft
+    from controllers.app_controller import Controller
+
+    def main(page: ft.Page):
         page.title = "Share++"
-        # Taille de fenêtre compacte et fixe
         page.window.width = 900
         page.window.height = 560
         page.window.min_width = 900
@@ -54,5 +55,4 @@ def main(page: ft.Page):
                 app.view.update_ui_for_path(folder_path)
                 page.update()
 
-    # Give Flet access to static assets (app_icon)
     ft.run(main, assets_dir="assets")
