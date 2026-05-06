@@ -44,6 +44,7 @@ class Model:
             "remember_path": True,
             "copy_to_clipboard": False,
             "context_menu_enabled": False,
+            "hotspot_enabled": False,
             "hotspot_ssid": "SharePlusPlus",
             "hotspot_password": "sharepp1",
         }
@@ -105,6 +106,10 @@ class Model:
         self.data["remember_path"] = not self.data["remember_path"]
         if not self.data["remember_path"]:
             self.data["selected_path"] = "" # Clear saved path
+        self.save_settings()
+    
+    def toggle_hotspot_enabled(self):
+        self.data["hotspot_enabled"] = not self.data["hotspot_enabled"]
         self.save_settings()
 
     # Get
