@@ -1,0 +1,127 @@
+"""
+cli.py
+
+Author:  Nathan Filipowitz
+Date:    2026-05-05
+Purpose: Headless CLI mode for Share++. Launched when --nogui is passed to main.py.
+
+Usage:
+    sharepp --nogui C:\folder --port 3001 --secure --password Pa$$w0rd
+"""
+
+import argparse
+import asyncio
+import datetime
+import hashlib
+import os
+import sys
+from pathlib import Path
+from aiohttp import web
+from controllers import network_controller
+from controllers.server import build_app
+
+COLORS = {
+    "info":    "\033[0m",
+    "success": "\033[92m",
+    "warning": "\033[93m",
+    "error":   "\033[91m",
+    "reset":   "\033[0m",
+}
+
+def log(message, level: str = "info"):
+    ts = datetime.datetime.now().strftime("%H:%M:%S")
+    color = COLORS.get(level, COLORS["info"])
+    print(f"{color}[{ts}] {message}{COLORS['reset']}", flush=True)
+
+def print_qr(url: str):
+    try:
+        import qrcode
+        qr = qrcode.QRCode(border=1)
+        qr.add_data(url)
+        qr.make(fit=True)
+        qr.print_ascii(invert=True)
+    except Exception as e:
+        log(f"Impossible d'afficher le QR code : {e}", "warning")
+
+def parse_args():
+    argv = []
+    for a in sys.argv[1:]: # remove program executable from args
+        if a != "--nogui": # remove '--nogui' argument from args
+            argv.append(a)
+
+    parser = argparse.ArgumentParser(
+        prog="sharepp",
+        description="Share++ — serveur de partage de fichiers en réseau local (mode CLI)",
+    )
+    # Positionnal argument : mandatory, doesn't use --
+    parser.add_argument("path", help="Répertoire à partager")
+    # Optionnal arguments
+    parser.add_argument("--port", type=int, default=8080, help="Port HTTP (défaut : 8080)")
+    parser.add_argument("--secure", action="store_true", help="Active la protection Basic Auth")
+    parser.add_argument("--password", type=str, default="", help="Mot de passe pour --secure")
+
+    return parser.parse_args(argv)
+
+async def _run(args):
+    shared_path = str(Path(args.path).resolve())
+
+    if not os.path.isdir(shared_path):
+        log(f"Répertoire introuvable : {shared_path}", "error")
+        sys.exit(1)
+
+    password_hash = ""
+    if args.secure:
+        if not args.password:
+            log("--secure activé sans --password : serveur ouvert sans protection.", "warning")
+        else:
+            password_hash = hashlib.sha256(args.password.encode()).hexdigest()
+
+    # Pass log argument to specify log function to use
+    app = build_app(shared_path, password_hash, log)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", args.port)
+
+    try:
+        await site.start()
+    except Exception as e:
+        log(f"Impossible de démarrer le serveur sur le port {args.port} : {e}", "error")
+        sys.exit(1)
+
+    local_ip = network_controller.get_local_ip()
+    url = f"http://{local_ip}:{args.port}"
+
+    # Terminal User Interface
+    print("\n")
+    print("═" * 50)
+    print(" Share++ CLI")
+    print("═" * 50)
+    print(f"  Répertoire : {shared_path}")
+    print(f"  Adresse    : {url}")
+    print(f"  Protection : {'✔️ activée' if password_hash else '❌ désactivée'}")
+    print("═" * 50)
+    print("\n")
+
+    print_qr(url)
+    print()
+    log("Serveur démarré. Ctrl+C pour arrêter.", "success")
+
+    # automatically shut down server after 900s (15min), also used to keep server alive
+    try:
+        while True:
+            await asyncio.sleep(900)
+    except Error as e:
+        log(f"Erreur du serveur de fichiers : {e}", "error")
+    finally:
+        await runner.cleanup()
+        log("Serveur arrêté.", "info")
+
+
+def run_cli():
+    args = parse_args()
+    try:
+        asyncio.run(_run(args))
+    except KeyboardInterrupt:
+        print()
+        log("Arrêt demandé par l'utilisateur.", "info")
