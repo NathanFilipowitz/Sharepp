@@ -75,6 +75,10 @@ async def _run(args):
         if not password:
             log("Aucun mot de passe saisi. Veuillez réessayer l'opération en inscrivant un mot de passe correct !", "error")
             sys.exit(1)
+        if len(password) < 8:
+            log("Le mot de passe doit faire au moins 8 caractères.", "warning")
+            continue  # keep asking if user enters a password < 8 char
+        break
         password_hash = hashlib.sha256(password.encode()).hexdigest()
         log("Protection activée.", "success")
 
