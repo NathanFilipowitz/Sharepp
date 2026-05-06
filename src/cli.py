@@ -15,6 +15,7 @@ import datetime
 import hashlib
 import os
 import sys
+import getpass
 from pathlib import Path
 from aiohttp import web
 from controllers import network_controller
@@ -58,7 +59,6 @@ def parse_args():
     # Optionnal arguments
     parser.add_argument("--port", type=int, default=8080, help="Port HTTP (défaut : 8080)")
     parser.add_argument("--secure", action="store_true", help="Active la protection Basic Auth")
-    parser.add_argument("--password", type=str, default="", help="Mot de passe pour --secure")
 
     return parser.parse_args(argv)
 
@@ -71,10 +71,12 @@ async def _run(args):
 
     password_hash = ""
     if args.secure:
-        if not args.password:
-            log("--secure activé sans --password : serveur ouvert sans protection.", "warning")
-        else:
-            password_hash = hashlib.sha256(args.password.encode()).hexdigest()
+        password = getpass.getpass("Mot de passe du partage : ")
+        if not password:
+            log("Aucun mot de passe saisi. Veuillez réessayer l'opération en inscrivant un mot de passe correct !", "error")
+            sys.exit(1)
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        log("Protection activée.", "success")
 
     # Pass log argument to specify log function to use
     app = build_app(shared_path, password_hash, log)
@@ -111,7 +113,7 @@ async def _run(args):
     try:
         while True:
             await asyncio.sleep(900)
-    except Error as e:
+    except Exception as e:
         log(f"Erreur du serveur de fichiers : {e}", "error")
     finally:
         await runner.cleanup()
