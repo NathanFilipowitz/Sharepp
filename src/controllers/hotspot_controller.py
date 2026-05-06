@@ -12,6 +12,33 @@ Purpose: Controller for creating a Wi-Fi access point with netsh wlan hostednetw
 import subprocess
 import platform
 
+def _is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except Exception:
+        return False
+
+# Restart app in Administrator mode. Fixes starting GUI app from contextual menu button
+def _elevate_and_restart():
+    args = " ".join(f'"{a}"' for a in sys.argv[1:])
+    ctypes.windll.shell32.ShellExecuteW(
+        None, "runas", sys.executable, args,
+        os.path.dirname(sys.executable),
+        1
+    )
+    sys.exit(0)
+
+# Verify admin rights and elevate if not. True = already admin, False = non-windows
+def ensure_admin():
+    import os
+    if platform.system() != "Windows":
+        return False  # Linux : mock, pas besoin d'élévation
+    if not _is_admin():
+        _elevate_and_restart()
+    return True
+ 
+
+
 def get_hotspot_status():
     # Check if hotspot is active
     if platform.system() == "Windows":
@@ -21,7 +48,8 @@ def get_hotspot_status():
         return {"running": is_running}
     return {"running": False}
 
-# AI USE: Gemini taught me about creation_flags in windows and implemented this function to prevent terminal flashes when executing shell commands (normally just using subprocess)
+# AI USE: Gemini taught me about creation_flags in windows and implemented this function to 
+# prevent terminal flashes when executing shell commands (normally just using subprocess)
 def execute_command(command):
     try:
         # CREATE_NO_WINDOW (0x08000000) prevent terminal flashing
