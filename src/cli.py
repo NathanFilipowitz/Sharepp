@@ -62,6 +62,19 @@ def parse_args():
 
     return parser.parse_args(argv)
 
+# Ask the user for a password until a valid one (>= 8 chars) is given.
+# Returns the sha256 hash of the password.
+def _prompt_password():
+    while True:
+        password = getpass.getpass("Mot de passe du partage (min. 8 car.) : ")
+        if not password:
+            log("Aucun mot de passe saisi.", "warning")
+            continue
+        if len(password) < 8:
+            log("Le mot de passe doit faire au moins 8 caractères.", "warning")
+            continue
+        return hashlib.sha256(password.encode()).hexdigest()
+
 async def _run(args):
     shared_path = str(Path(args.path).resolve())
 
@@ -71,15 +84,7 @@ async def _run(args):
 
     password_hash = ""
     if args.secure:
-        password = getpass.getpass("Mot de passe du partage : ")
-        if not password:
-            log("Aucun mot de passe saisi. Veuillez réessayer l'opération en inscrivant un mot de passe correct !", "error")
-            sys.exit(1)
-        if len(password) < 8:
-            log("Le mot de passe doit faire au moins 8 caractères.", "warning")
-            continue  # keep asking if user enters a password < 8 char
-        break
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        password_hash = _prompt_password()
         log("Protection activée.", "success")
 
     # Pass log argument to specify log function to use
