@@ -15,6 +15,19 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
 
+# AI USE (Gemini): On Windows, when the app is launched via the explorer
+# context menu, the current working directory is the selected folder.
+# Flet/Flutter then tries to create its data folder inside the CWD, which
+# causes "PathAccessException: Cannot create file" if the user has no
+# write access there. We force CWD to the executable's directory before
+# importing Flet to avoid this crash.
+if sys.platform == "win32" and getattr(sys, "frozen", False):
+    try:
+        os.chdir(os.path.dirname(sys.executable))
+    except Exception:
+        pass
+
+
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
