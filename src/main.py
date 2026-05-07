@@ -23,6 +23,12 @@ def is_admin():
 
 if "--nogui" in sys.argv:
     from cli import run_cli
+    # AI code (Gemini): hide flet's window immediatly after opening in headless mode
+    if sys.platform == "win32" and getattr(sys, 'frozen', False):
+        import ctypes
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        # makes window invisible
+        ctypes.windll.user32.ShowWindow(hwnd, 0)
     run_cli()
 else:
     import flet as ft
