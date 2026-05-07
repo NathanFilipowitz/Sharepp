@@ -25,25 +25,20 @@ if "--nogui" in sys.argv:
     from cli import run_cli
     run_cli()
 else:
-    # Start GUI app in administrator mode for exectuing netsh commands
-    if os.name == 'nt' and not is_admin():
-        args = " ".join(f'"{a}"' for a in sys.argv[1:])
-        ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", sys.executable, args,
-            os.path.dirname(sys.executable),  # WorkingDirectory explicite
-            1
-        )
-        sys.exit(0)
-
     import flet as ft
     from controllers.app_controller import Controller
 
+    # AI FIX (Gemini): use asyncio correct event loop for Windows
+    if sys.platform == "win32":
+        import asyncio
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     def main(page: ft.Page):
         page.title = "Share++"
-        page.window.width = 900
-        page.window.height = 560
-        page.window.min_width = 900
-        page.window.min_height = 560
+        page.window.width = 1000
+        page.window.height = 800
+        page.window.min_width = 1000
+        page.window.min_height = 800
 
         app = Controller(page)
 
