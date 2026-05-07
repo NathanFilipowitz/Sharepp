@@ -148,7 +148,7 @@ class View:
             label=ft.Text("Créer un point d'accès Wi-Fi au démarrage"),
             on_click=self._toggle_hotspot_enabled,
             selected=self.controller.model.data.get("hotspot_enabled", False),
-            # Grisé si pas Windows — affiché mais non cliquable
+            # Greyed out on non-windows platforms
             disabled=sys.platform != "win32",
             tooltip="Nécessite Windows et une carte Wi-Fi compatible" if sys.platform != "win32" else "",
         )
@@ -243,8 +243,6 @@ class View:
         
         log_text = ft.Text(f"[{timestamp}] {message}", size=12, color=log_color, selectable=True)
         self.logs_column.controls.append(log_text)
-        # Auto scroll to always see the latest logs
-        self.logs_column.scroll_to(offset=-1, duration=100)
         self.page.update()
     
     def toggle_logs_visibility(self):
@@ -261,6 +259,68 @@ class View:
     def toggle_context_menu(self, e):
         self.controller.toggle_context_menu()
         e.control.selected = self.controller.model.data.context_menu_enabled
+        self.page.update()
+    
+    def open_port_dialog(self):
+        port_field = ft.TextField(
+            label="Port",
+            value=str(self.controller.model.port),
+            keyboard_type=ft.KeyboardType.NUMBER,
+            width=150,
+        )
+
+        def save(e):
+            self.controller.save_port(port_field.value)
+            dialog.open = False
+            self.page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Changer le port du serveur"),
+            content=port_field,
+            actions=[
+                ft.TextButton(
+                    "Annuler",
+                    on_click=lambda e: setattr(dialog, 'open', False) or self.page.update()
+                ),
+                ft.TextButton("Enregistrer", on_click=save),
+            ],
+        )
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
+
+    def open_hotspot_config_dialog(self):
+        ssid_field = ft.TextField(
+            label="Nom du réseau (SSID)",
+            value=self.controller.model.hotspot_ssid,
+            width=250,
+        )
+        pwd_field = ft.TextField(
+            label="Mot de passe Wi-Fi",
+            value=self.controller.model.hotspot_password,
+            password=True,
+            can_reveal_password=True,
+            width=250,
+            helper_text="Minimum 8 caractères (WPA2)",
+        )
+
+        def save(e):
+            self.controller.save_hotspot_credentials(
+                ssid_field.value, pwd_field.value
+            )
+            dialog.open = False
+            self.page.update()
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Configuration réseau Wi-Fi"),
+            content=ft.Column([ssid_field, pwd_field], spacing=12, tight=True),
+            actions=[
+                ft.TextButton("Annuler", on_click=lambda e: setattr(dialog, 'open', False) or self.page.update()),
+                ft.TextButton("Enregistrer", on_click=save),
+            ],
+        )
+        self.page.overlay.append(dialog)
+        dialog.open = True
         self.page.update()
 
     # Updates title and shows/hides server icons if a path was selected
@@ -284,7 +344,7 @@ class View:
         # Don't deactivate the entire card, just each widgets independently. Prevention to unclickable button when qr is shown
         self.pick_button.disabled = running
         self.password_protect_control_chip.disabled = running
-        self.toggle_card.disabled = False  # ne jamais disabled la card entière
+        self.toggle_card.disabled = False
         self.page.update()
     
     def _toggle_hotspot_enabled(self, e):
@@ -302,7 +362,7 @@ class View:
             ft.Divider(height=1),
         ]
 
-        # Card d'instruction hotspot — visible uniquement si le hotspot est actif
+        # Hotspot usage guide, only active if hotspot is active
         if hotspot_url:
             tiles.append(
                 ft.Container(
@@ -339,7 +399,6 @@ class View:
     # replace QR code with controls for the card content
     def show_controls(self):
         self.toggle_card.content.content = self.controls_content
-        # self.hotspot_card.content.content = self.hotspot_controls_content
         self.stop_button_qr.visible = False
         self.start_button.visible = bool(self.controller.model.selected_path)
         self._primary_url = ""

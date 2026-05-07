@@ -21,6 +21,7 @@ from models.model import Model
 from controllers import hotspot_controller
 from controllers import network_controller
 from controllers.server_controller import build_app, parse_user_agent
+from controllers.hotspot_controller import ensure_admin
 from pathlib import Path
 from views import download_view
 from views.view import View
@@ -35,7 +36,10 @@ class Controller:
     def log(self, message, level):
         self.model.log_to_file(message, level)
         # Use run_thread to call UI-updating methods from other threads
-        self.view.page.run_thread(self.view.add_log_entry, message, level)
+        self.view.page.run_task(self._async_log_entry, message, level)
+    
+    async def _async_log_entry(self, message, level):
+        self.view.add_log_entry(message, level)
     
     async def pick_folder(self, e):
         path = await self.view.file_picker.get_directory_path()
@@ -50,39 +54,28 @@ class Controller:
             self.log(f"Dossier sélectionné : {e.path}", "info")
     
     def open_port_dialog(self, e):
-        port_field = ft.TextField(
-            label="Port",
-            value=str(self.model.port),
-            keyboard_type=ft.KeyboardType.NUMBER,
-            width=150,
-        )
+        self.view.open_port_dialog()
 
-        def save_port(e):
-            try:
-                new_port = int(port_field.value)
-                if 1024 <= new_port <= 65535:
-                    self.model.set_port(new_port)   # set_port() sauvegarde dans settings.json
-                    self.log(f"Port changé : {new_port}", "info")
-                    dialog.open = False
-                    self.view.page.update()
-                else:
-                    port_field.error_text = "Entre 1024 et 65535"
-                    self.view.page.update()
-            except ValueError:
-                port_field.error_text = "Nombre invalide"
-                self.view.page.update()
-
-        dialog = ft.AlertDialog(
-            title=ft.Text("Changer le port"),
-            content=port_field,
-            actions=[
-                ft.TextButton("Annuler", on_click=lambda e: setattr(dialog, 'open', False) or self.view.page.update()),
-                ft.TextButton("Enregistrer", on_click=save_port),
-            ],
-        )
-        self.view.page.overlay.append(dialog)
-        dialog.open = True
-        self.view.page.update()
+    def save_port(self, value):
+        try:
+            new_port = int(value)
+            if 1024 <= new_port <= 65535:
+                self.model.set_port(new_port)
+                self.log(f"Port changé : {new_port}", "info")
+            else:
+                self.log("Port invalide — doit être entre 1024 et 65535", "warning")
+        except Exception as e:
+            self.log(f"Valeur de port invalide : {e}", "warning")
+    
+    def open_hotspot_config_dialog(self, e):
+        self.view.open_hotspot_config_dialog()
+    
+    def save_hotspot_credentials(self, ssid, password):
+        if len(password) < 8:
+            self.log("Le mot de passe doit faire au moins 8 caractères.", "warning")
+            return
+        self.model.set_hotspot_credentials(ssid, password)
+        self.log(f"Configuration Wi-Fi sauvegardée : {ssid}", "info")
     
     def toggle_remember_path(self, e):
         self.model.toggle_remember_path()
@@ -194,8 +187,12 @@ class Controller:
         self.model.server_running = True
         self.view.update_server_status(True)
 
-        local_ip, overlay_ips = await asyncio.to_thread(self._detect_all_ips)
-        await self._show_connection_info(local_ip, overlay_ips)
+        # Automatically start hotspot if enabled in settings
+        if self.model.data.get("hotspot_enabled", False):
+            await self._start_hotspot_ap(None)
+
+        local_ip, tailscale_ip, hotspot_ip = await asyncio.to_thread(self._detect_all_ips)
+        await self._show_connection_info(local_ip, tailscale_ip, hotspot_ip)
 
         status = "Protection activée" if self.model.data["is_protected"] else "Serveur ouvert (sans protection)"
         self.log(status, "warning" if self.model.data["is_protected"] else "info")
@@ -203,6 +200,10 @@ class Controller:
     
     async def stop_server(self, e):
         if self.model.server_running and self.model.server_runner:
+            status = await asyncio.to_thread(hotspot_controller.get_hotspot_status)
+            if status["running"]:
+                await self._stop_hotspot_ap(None)
+
             await self.model.server_runner.cleanup()
             self.model.server_runner = None
             self.model.server_running = False
@@ -234,6 +235,8 @@ class Controller:
     
     async def toggle_hotspot(self, e):
         # prevention against running netsh without admin (app crash)
+        if sys.platform == "win32":
+            ensure_admin()
         status = await asyncio.to_thread(hotspot_controller.get_hotspot_status)
         if status["running"]:
             await self._stop_hotspot_ap(e)
