@@ -21,14 +21,28 @@ def is_admin():
     except:
         return False
 
+# AI USE (Gemini): a Flet build is "windowed" (no attached console), so
+# print() goes nowhere when launched from a terminal. AttachConsole(-1)
+# (ATTACH_PARENT_PROCESS) attaches the running process to the console
+# of the parent (cmd.exe / PowerShell), so stdout/stderr show up there.
+def _attach_parent_console_windows():
+    if sys.platform != "win32":
+        return
+    try:
+        ATTACH_PARENT_PROCESS = -1
+        if ctypes.windll.kernel32.AttachConsole(ATTACH_PARENT_PROCESS):
+            # Re-bind Python stdio to the now-attached console.
+            sys.stdout = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
+            sys.stderr = open("CONOUT$", "w", buffering=1, encoding="utf-8", errors="replace")
+            sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
+    except Exception:
+        # If attaching fails (no parent console), CLI mode will simply have no output.
+        pass
+
+
 if "--nogui" in sys.argv:
+    _attach_parent_console_windows()
     from cli import run_cli
-    # AI code (Gemini): hide flet's window immediatly after opening in headless mode
-    if sys.platform == "win32" and getattr(sys, 'frozen', False):
-        import ctypes
-        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
-        # makes window invisible
-        ctypes.windll.user32.ShowWindow(hwnd, 0)
     run_cli()
 else:
     import flet as ft
