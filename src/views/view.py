@@ -308,8 +308,7 @@ class View:
             self.controller.save_hotspot_credentials(
                 ssid_field.value, pwd_field.value
             )
-            dialog.open = False
-            self.page.update()
+            self.page.close(dialog)
 
         dialog = ft.AlertDialog(
             title=ft.Text("Configuration réseau Wi-Fi"),
@@ -319,9 +318,7 @@ class View:
                 ft.TextButton("Enregistrer", on_click=save),
             ],
         )
-        self.page.overlay.append(dialog)
-        dialog.open = True
-        self.page.update()
+        self.page.open(dialog)
 
     # Updates title and shows/hides server icons if a path was selected
     def update_ui_for_path(self, path, is_running=False):
