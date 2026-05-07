@@ -195,22 +195,6 @@ class View:
             expand=True
         )
 
-        self.hotspot_chip = ft.Chip(
-            label=ft.Text("Créer un point d'accès Wi-Fi au démarrage"),
-            on_click=self._toggle_hotspot_enabled,
-            selected=self.controller.model.data.get("hotspot_enabled", False),
-            # Grisé si pas Windows — affiché mais non cliquable
-            disabled=sys.platform != "win32",
-            tooltip="Nécessite Windows et une carte Wi-Fi compatible" if sys.platform != "win32" else "",
-        )
-
-        self.hotspot_config_button = ft.TextButton(
-            "Configurer le réseau Wi-Fi",
-            icon=ft.Icons.SETTINGS_OUTLINED,
-            on_click=self.controller.open_hotspot_config_dialog,
-            disabled=sys.platform != "win32",
-        )
-
         self.left_column = ft.Column(
             [self.toggle_card],
             spacing=0,
@@ -308,7 +292,8 @@ class View:
             self.controller.save_hotspot_credentials(
                 ssid_field.value, pwd_field.value
             )
-            self.page.close(dialog)
+            dialog.open = False
+            self.page.update()
 
         dialog = ft.AlertDialog(
             title=ft.Text("Configuration réseau Wi-Fi"),
@@ -318,7 +303,9 @@ class View:
                 ft.TextButton("Enregistrer", on_click=save),
             ],
         )
-        self.page.open(dialog)
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
 
     # Updates title and shows/hides server icons if a path was selected
     def update_ui_for_path(self, path, is_running=False):
