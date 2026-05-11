@@ -388,22 +388,6 @@ class View:
         self._primary_url = ""
         self._secondary_url = ""
         self.page.update()
-    
-    # Update hotspot creation button based on hotspot status
-    def update_hotspot_button(self, is_running):
-        if is_running:
-            self.hotspot_button.text = "Arrêter le point d'accès"
-            self.hotspot_button.icon = ft.Icons.WIFI_TETHERING_OFF
-            self.hotspot_button.style = ft.ButtonStyle(
-                bgcolor={ft.ControlState.DEFAULT: ft.Colors.RED_400},
-                color={ft.ControlState.DEFAULT: ft.Colors.WHITE},
-            )
-        else:
-            self.hotspot_button.text = "Créer un point d'accès Wi-Fi"
-            self.hotspot_button.icon = ft.Icons.WIFI_TETHERING
-            self.hotspot_button.style = None
-        self.page.update()
-
 
     def show_hotspot_qr_codes(self, wifi_qr, url_qr, ssid, password, download_url):
         async def _copy_url(e):
