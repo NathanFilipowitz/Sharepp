@@ -3,10 +3,9 @@ cli.py
 
 Author:  Nathan Filipowitz
 Date:    2026-05-05
-Purpose: Headless CLI mode for Share++. Launched when --nogui is passed to main.py.
-
+Purpose: Headless CLI mode for Share++.
 Usage:
-    sharepp --nogui C:\folder --port 3001 --secure --password Pa$$w0rd
+    sharepp-cli.exe C:\folder [--port 3001] [--secure]
 """
 
 import argparse
@@ -45,22 +44,17 @@ def print_qr(url: str):
         log(f"Impossible d'afficher le QR code : {e}", "warning")
 
 def parse_args():
-    argv = []
-    for a in sys.argv[1:]: # remove program executable from args
-        if a != "--nogui": # remove '--nogui' argument from args
-            argv.append(a)
-
     parser = argparse.ArgumentParser(
-        prog="sharepp",
+        prog="sharepp-cli",
         description="Share++ — serveur de partage de fichiers en réseau local (mode CLI)",
     )
-    # Positionnal argument : mandatory, doesn't use --
+    # Positional argument : mandatory, doesn't use --
     parser.add_argument("path", help="Répertoire à partager")
-    # Optionnal arguments
+    # Optional arguments
     parser.add_argument("--port", type=int, default=8080, help="Port HTTP (défaut : 8080)")
     parser.add_argument("--secure", action="store_true", help="Active la protection Basic Auth")
 
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 # Ask the user for a password until a valid one (>= 8 chars) is given.
 # Returns the sha256 hash of the password.
