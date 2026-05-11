@@ -198,41 +198,20 @@ class Controller:
         ssid = self.model.hotspot_ssid
         pwd  = self.model.hotspot_password
 
-        self.log("Initialisation du point d'acces...", "info")
-        self.view.update_hotspot_button(True)
-        
         # run in asyncio thread not to block the app
         success, message = await asyncio.to_thread(hotspot_controller.setup_and_start, ssid, pwd)
 
         if not success:
             self.log(f"Erreur hotspot : {message}", "error")
-            self.view.update_hotspot_button(False)
             return
         self.log(f"Hotspot demarre : {ssid}", "success")
-        await self._generate_and_show_qrs(ssid, pwd)
-
-
-    async def _generate_and_show_qrs(self, ssid, pwd):
-         # QR Wi-Fi
         wifi_string = f"WIFI:T:WPA;S:{ssid};P:{pwd};H:;;"
-        wifi_qr_data = self.generate_qr_data_url(wifi_string)
- 
-        # QR URL — ip locale au moment du demarrage
-        local_ip = network_controller.get_local_ip()
-        download_url = f"http://{local_ip}:{self.model.port}" if local_ip else None
-        url_qr_data = self.generate_qr_data_url(download_url) if download_url else None
- 
-        self.log("Scannez le QR Wi-Fi -> connectez-vous -> scannez le QR URL.", "info")
- 
-        self.view.show_hotspot_qr_codes(
-            wifi_qr_data, url_qr_data, ssid, pwd, download_url
-        )
+        self._hotspot_wifi_qr = self.generate_qr_data_url(wifi_string)
 
     async def _stop_hotspot_ap(self, e):
         ok, msg = await asyncio.to_thread(hotspot_controller.stop_hotspot)
         level = "info" if ok else "error"
         self.log(f"Hotspot : {msg}", level)
-        self.view.update_hotspot_button(False)
         self.view.show_controls()
     
     def _detect_all_ips(self):
