@@ -189,7 +189,6 @@ class View:
                 ink=True,
                 padding=20
             ),
-            height=280,
             margin=ft.margin.only(left=20, right=20, top=20, bottom=0),
             elevation=10,
             expand=True
