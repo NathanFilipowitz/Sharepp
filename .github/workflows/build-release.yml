@@ -40,6 +40,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.4'
+      
+      - name: Check versions
+        run: pip show pydantic pydantic-core aiohttp yarl
 
       - name: Build GUI with Flet
         env:
