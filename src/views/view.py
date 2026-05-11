@@ -88,8 +88,8 @@ class View:
         )
         
         self.page.appbar = ft.AppBar(
-            leading=ft.Image(src="icons/app_icon_compressed.svg"),
-            leading_width=100,
+            leading=ft.Icon(ft.Icons.SHARE, color=ft.Colors.WHITE, size=30),
+            leading_width=60,
             title=self.appbar_title,
             center_title=True,
             bgcolor=ft.Colors.BLUE_200,
