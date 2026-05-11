@@ -323,7 +323,7 @@ class View:
         e.control.selected = self.controller.model.data["hotspot_enabled"]
         self.page.update()
 
-    def show_connection_tiles(self, local_qr, local_url, ts_qr, ts_url, hotspot_qr, hotspot_url):
+    def show_connection_tiles(self, local_qr, local_url, ts_qr, ts_url, hotspot_qr, hotspot_url, hotspot_wifi_qr=None):
         self._primary_url   = local_url   or ""
         self._secondary_url = ts_url      or ""
         self.stop_button_qr.visible = True
@@ -338,13 +338,8 @@ class View:
             tiles.append(
                 ft.Container(
                     content=ft.Row([
-                        ft.Icon(ft.Icons.WIFI_TETHERING, color=ft.Colors.BLUE_400, size=18),
-                        ft.Text(
-                            "Connectez-vous d'abord au Wi-Fi Share++ puis scannez l'URL ci-dessous",
-                            size=11,
-                            italic=True,
-                            expand=True,
-                        ),
+                        ft.Icon(ft.Icons.WIFI_TETHERING, color=ft.Colors.BLUE_600, size=16),
+                        ft.Text("Point d'accès Wi-Fi", weight=ft.FontWeight.BOLD, size=13, italic=True, expand=True,),
                     ], spacing=8),
                     bgcolor=ft.Colors.BLUE_50,
                     border_radius=8,
@@ -353,17 +348,46 @@ class View:
                 )
             )
 
-        # ExpansionTiles dans l'ordre : LAN, Hotspot, Tailscale
-        if local_url:
-            tiles.append(self._make_qr_expansion_tile("Réseau local", local_qr, local_url))
-        if hotspot_url:
+        if hotspot_wifi_qr:
             tiles.append(self._make_qr_expansion_tile(
-                "Point d'accès Wi-Fi (192.168.137.x)", hotspot_qr, hotspot_url,
-                icon=ft.Icons.WIFI_TETHERING
+                "1 · Se connecter au Wi-Fi Share++",
+                hotspot_wifi_qr, "",
+                icon=ft.Icons.WIFI_ROUNDED,
+                expanded=True,       # ouvert par défaut
             ))
-        if ts_url:
-            tiles.append(self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url))
+            tiles.append(self._make_qr_expansion_tile(
+                "2 · Télécharger les fichiers",
+                hotspot_qr, hotspot_url,
+                icon=ft.Icons.DOWNLOAD_ROUNDED,
+            ))
+            tiles.append(ft.Divider(height=8, thickness=2))
 
+            # Bloc réseau local
+        if local_url:
+            tiles.append(
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.LAN, color=ft.Colors.GREY_600, size=16),
+                        ft.Text("Réseau local", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.GREY_600),
+                    ], spacing=6),
+                    padding=ft.padding.only(left=16, top=4, bottom=4),
+                )
+            )
+            tiles.append(self._make_qr_expansion_tile("Réseau local", local_qr, local_url))
+
+        # Bloc Tailscale
+        if ts_url:
+            tiles.append(ft.Divider(height=8, thickness=2))
+            tiles.append(
+                ft.Container(
+                    content=ft.Row([
+                        ft.Icon(ft.Icons.VPN_LOCK_ROUNDED, color=ft.Colors.PURPLE_400, size=16),
+                        ft.Text("Tunnel (Tailscale)", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.PURPLE_400),
+                    ], spacing=6),
+                    padding=ft.padding.only(left=16, top=4, bottom=4),
+                )
+            )
+            tiles.append(self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url))
         self.toggle_card.content.content = ft.Column(tiles, spacing=0)
         self.page.update()
         
@@ -458,7 +482,7 @@ class View:
         )
         self.page.update()
 
-    def _make_qr_expansion_tile(self, title, qr_data, url, icon=ft.Icons.QR_CODE_ROUNDED):
+    def _make_qr_expansion_tile(self, title, qr_data, url, icon=ft.Icons.QR_CODE_ROUNDED, expanded=False):
         async def _copy(e, u=url):
             await ft.Clipboard().set(u)
             self.page.show_dialog(ft.SnackBar(ft.Text("Adresse copiée !"), duration=1500))
@@ -469,24 +493,26 @@ class View:
             subtitle=ft.Row(
                 [
                     ft.Text(url, size=11, selectable=True, expand=True, overflow=ft.TextOverflow.ELLIPSIS),
-                    ft.IconButton(
-                        icon=ft.Icons.OPEN_IN_BROWSER_ROUNDED,
-                        tooltip="Ouvrir dans le navigateur",
-                        icon_size=16,
-                        on_click=lambda _, u=url: webbrowser.open(u),
-                    ),
-                    ft.IconButton(
-                        icon=ft.Icons.COPY_ROUNDED,
-                        tooltip="Copier l'adresse",
-                        icon_size=16,
-                        on_click=_copy,
-                    ),
+                    *([ 
+                        ft.IconButton(
+                            icon=ft.Icons.OPEN_IN_BROWSER_ROUNDED,
+                            tooltip="Ouvrir dans le navigateur",
+                            icon_size=16,
+                            on_click=lambda _, u=url: webbrowser.open(u),
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.COPY_ROUNDED,
+                            tooltip="Copier l'adresse",
+                            icon_size=16,
+                            on_click=_copy,
+                        ),
+                    ] if url else []),
                 ],
                 spacing=0,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
             leading=ft.Icon(icon),
-            expanded=False,
+            expanded=expanded,
             maintain_state=True,
             controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
             controls=[
@@ -497,5 +523,5 @@ class View:
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     spacing=6,
                 ),
-            ],
+            ] if qr_data else [ft.Text("QR indisponible", italic=True, size=12)],
         )
