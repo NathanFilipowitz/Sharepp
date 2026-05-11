@@ -2,3 +2,4 @@ flet[all]
 aiohttp
 qrcode
 Pillow
+pyinstaller

@@ -46,6 +46,7 @@ jobs:
           PYTHONUTF8: "1"
         run: |
           Copy-Item requirements.txt src\requirements.txt
+          Copy-Item pyproject.toml src\pyproject.toml
           cd src
           flet build windows --verbose
           cd ..
