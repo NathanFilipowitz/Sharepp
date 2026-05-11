@@ -45,8 +45,8 @@ def _detect_tailscale_ip():
         if ip and re.match(r"^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\.\d{1,3}\.\d{1,3}$", ip):
             return ip
 
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error during Tailscale ip detection: {e}")
 
     return None
 
