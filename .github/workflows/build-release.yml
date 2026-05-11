@@ -41,7 +41,7 @@ jobs:
         with:
           flutter-version: '3.41.4'
 
-      - name: Build with Flet
+      - name: Build GUI with Flet
         env:
           PYTHONUTF8: "1"
         run: |
@@ -72,15 +72,31 @@ jobs:
       - name: Build installer with Inno Setup
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" setup.iss
-
-      - name: Create GitHub Release and upload installer
+      
+      - name: Build CLI with PyInstaller
+        env:
+          PYTHONUTF8: "1"
+        working-directory: src
+        run: |
+          pyinstaller --onefile --name sharepp-cli --console --clean cli.py
+        
+      - name: Create GitHub Release and upload artifacts
         uses: softprops/action-gh-release@v2
         with:
           name: Share++ ${{ env.VERSION }}
           body: |
             ## Share++ v${{ env.VERSION }}
-            Installateur Windows pour Share++.
-            **Installation :** Téléchargez le fichier `.exe` ci-dessous et exécutez-le.
-          files: ./installer_output/SharePlusPlus_Setup_${{ env.VERSION }}.exe
+
+            ### Installateur Windows (GUI)
+            Téléchargez la version par défaut de Share++ **SharePlusPlus_Setup_${{ env.VERSION }}.exe** et exécutez-le pour démarrer l'assistant d'installation.
+
+            ### Version CLI ()
+            Téléchargez la version en ligne de commande de Share++ **sharepp-cli.exe** (Recommendé pour les utilisateurs expérimentés).
+            ```
+            sharepp-cli.exe C:\mon-dossier [--port 3001] [--secure]
+            ```
+          files: |
+            ./installer_output/SharePlusPlus_Setup_${{ env.VERSION }}.exe
+            ./src/dist/sharepp-cli.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
