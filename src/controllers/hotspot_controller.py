@@ -11,6 +11,9 @@ Purpose: Controller for creating a Wi-Fi access point with netsh wlan hostednetw
 # HKEY_CURRENT_USER registry scope). See execute_command() for details.
 import subprocess
 import platform
+import ctypes
+import sys
+import os 
 
 def _is_admin():
     try:
@@ -30,7 +33,6 @@ def _elevate_and_restart():
 
 # Verify admin rights and elevate if not. True = already admin, False = non-windows
 def ensure_admin():
-    import os
     if platform.system() != "Windows":
         return False  # Linux : mock, pas besoin d'élévation
     if not _is_admin():
