@@ -64,9 +64,8 @@ jobs:
       - name: Build CLI with PyInstaller
         env:
           PYTHONUTF8: "1"
-        working-directory: src
         run: |
-          pyinstaller --onefile --name sharepp-cli --console --clean cli.py
+          pyinstaller --onefile --name sharepp-cli --console --clean --paths src --add-data "src/views;views" src/cli.py
         
       - name: Create GitHub Release and upload artifacts
         uses: softprops/action-gh-release@v2
