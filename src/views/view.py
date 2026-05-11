@@ -272,7 +272,7 @@ class View:
             password=True,
             can_reveal_password=True,
             width=250,
-            helper_text="Minimum 8 caractères (WPA2)",
+            helper="Minimum 8 caractères (WPA2)",
         )
 
         def save(e):
