@@ -42,7 +42,7 @@ class Controller:
         self.view.add_log_entry(message, level)
     
     async def pick_folder(self, e):
-        path = await self.view.file_picker.get_directory_path()
+        path = await ft.FilePicker().get_directory_path()
         if path:
             self.model.set_path(path)
             self.view.update_ui_for_path(path)
