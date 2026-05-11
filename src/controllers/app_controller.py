@@ -230,11 +230,13 @@ class Controller:
         local_qr = self.generate_qr_data_url(local_url) if local_url else None
         ts_qr = self.generate_qr_data_url(tailscale_url) if tailscale_url else None
         hotspot_qr = self.generate_qr_data_url(hotspot_url) if hotspot_url else None
+        hotspot_wifi_qr = getattr(self, "_hotspot_wifi_qr", None)
 
         self.view.show_connection_tiles(
             local_qr,     local_url,
             ts_qr,        tailscale_url,
             hotspot_qr,   hotspot_url,
+            hotspot_wifi_qr
         )
 
         if tailscale_url:
