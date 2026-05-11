@@ -37,6 +37,18 @@ Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environmen
   ValueType: expandsz; ValueName: "Path"; \
   ValueData: "{olddata};{app}"; \
   Check: NeedsAddPath(ExpandConstant('{app}'))
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\SharePP"; \
+  ValueType: string; ValueName: ""; ValueData: "Partager avec Share++"; \
+  Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\SharePP"; \
+  ValueType: string; ValueName: "Icon"; \
+  ValueData: "{app}\{#AppExeName}"
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\SharePP"; \
+  ValueType: string; ValueName: "WorkingDirectory"; \
+  ValueData: "{app}"
+Root: HKCU; Subkey: "Software\Classes\Directory\shell\SharePP\command"; \
+  ValueType: string; ValueName: ""; \
+  ValueData: """{app}\{#AppExeName}"" ""%1"""
 
 [Code]
 function NeedsAddPath(Param: string): boolean;

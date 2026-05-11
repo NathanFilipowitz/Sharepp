@@ -43,7 +43,6 @@ class Model:
             "qr_enabled": True,
             "remember_path": True,
             "copy_to_clipboard": False,
-            "context_menu_enabled": False,
             "hotspot_enabled": False,
             "hotspot_ssid": "SharePlusPlus",
             "hotspot_password": "sharepp1",
@@ -128,10 +127,6 @@ class Model:
     @property
     def remember_path(self):
         return self.data["remember_path"]
-
-    @property
-    def context_menu_enabled(self):
-        return self.data["context_menu_enabled"]
     
     @property
     def copy_to_clipboard(self):
@@ -181,10 +176,6 @@ class Model:
     
     def toggle_logs(self):
         self.data["logs_visible"] = not self.data["logs_visible"]
-        self.save_settings()
-    
-    def toggle_context_menu(self):
-        self.data["context_menu_enabled"] = not self.data["context_menu_enabled"]
         self.save_settings()
     
     def toggle_copy_clipboard(self):

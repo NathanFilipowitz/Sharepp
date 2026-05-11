@@ -108,11 +108,6 @@ class View:
                             on_click=self.controller.toggle_remember_path
                         ),
                         ft.PopupMenuItem(
-                            content="Ajouter au menu contextuel",
-                            checked=self.controller.model.data.get("context_menu_enabled", False),
-                            on_click=self.controller.toggle_context_menu
-                        ),
-                        ft.PopupMenuItem(
                             content="Effacer l'adresse",
                             on_click=self.controller.clear_path),
                         ft.PopupMenuItem(
@@ -237,11 +232,6 @@ class View:
         self.password_entry.visible = not self.password_entry.visible
         e.control.selected = self.password_entry.visible
         self.controller.toggle_protection(e) 
-        self.page.update()
-
-    def toggle_context_menu(self, e):
-        self.controller.toggle_context_menu()
-        e.control.selected = self.controller.model.data.context_menu_enabled
         self.page.update()
     
     def open_port_dialog(self):

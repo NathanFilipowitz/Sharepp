@@ -107,58 +107,6 @@ class Controller:
         event.control.checked = self.model.data["copy_to_clipboard"]
         self.view.page.update()
 
-    def toggle_context_menu(self, event):
-        # reverse current state
-        new_state = not self.model.data.get("context_menu_enabled", False)
-        
-        # Windows registry logic (AI suggested)
-        if sys.platform == "win32":
-            try:
-                self._update_windows_registry(new_state)
-                self.model.data["context_menu_enabled"] = new_state
-                self.model.save_settings()
-            except Exception as e:
-                print(f"Erreur registre : {e}")
-        event.control.checked = self.model.data["context_menu_enabled"]
-        self.view.page.update()
-
-    # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
-    def _update_windows_registry(self, add_menu: bool):
-        import winreg
-        # Use HKEY_CURRENT_USER to prevent administration privilege requirement
-        key_path = r"Software\Classes\Directory\shell\Sharepp"
-        
-        if add_menu:
-            # Create the menu in contextual right-click
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-                winreg.SetValue(key, "", winreg.REG_SZ, "Partager avec Share++")
-                winreg.SetValueEx(key, "Icon", 0, winreg.REG_SZ, sys.executable)
-
-            # Create the command to open the app
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command") as key:
-                # AI Implementation of finding app path in system, universally
-                # if launching from .exe
-                if getattr(sys, 'frozen', False):
-                    # On est dans l'exécutable (.exe)
-                    launch_command = f'"{sys.executable}" "%1"'
-                # sys.executable = python.exe | sys.argv[0] = main.py
-                else:
-                    app_path = os.path.abspath(sys.argv[0])
-                    # %1 represents the selected folder path (provided by windows)
-                    launch_command = f'"{sys.executable}" "{app_path}" "%1"'
-                winreg.SetValue(key, "", winreg.REG_SZ, launch_command)
-
-            # Fix: fixed Contextual menu crash by setting Working Directory on startup (AI recommendation: Gemini)
-            exe_dir = os.path.dirname(sys.executable)
-            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path) as key:
-                winreg.SetValueEx(key, "WorkingDirectory", 0, winreg.REG_SZ, exe_dir)
-        else:
-            try:
-                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, rf"{key_path}\command")
-                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, key_path)
-            except WindowsError:
-                self.log(f"Erreur lors de la suppression du bouton contextuel. Erreur: {WindowsError}", "error")
-
     # AI USE: I PARTIALLY USED AI FOR CREATING THIS FUNCTION (journal_travail for more details)
     async def start_server(self, e=None):
         if not self.model.selected_path:
