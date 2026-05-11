@@ -46,14 +46,6 @@ jobs:
           PYTHONUTF8: "1"
         run: |
           flet build windows --verbose
-      
-      - name: Rename exe
-        run: |
-          $exe = Get-ChildItem -Path "src\build\windows" -Recurse -Filter "src.exe" | Select-Object -First 1
-          Write-Host "Trouvé: $($exe.FullName)"
-          Rename-Item $exe.FullName "sharepp.exe"
-          Write-Host "Contenu du dossier build:"
-          Get-ChildItem -Path "src\build\windows" -Recurse | Select-Object FullName
 
       - name: Install Inno Setup
         run: choco install innosetup -y
