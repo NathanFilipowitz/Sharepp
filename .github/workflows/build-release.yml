@@ -84,6 +84,6 @@ jobs:
             ```
           files: |
             ./installer_output/SharePlusPlus_Setup_${{ env.VERSION }}.exe
-            ./src/dist/sharepp-cli.exe
+            ./dist/sharepp-cli.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
