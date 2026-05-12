@@ -46,13 +46,13 @@ def print_qr(url: str):
 def parse_args():
     parser = argparse.ArgumentParser(
         prog="sharepp-cli",
-        description="Share++ — serveur de partage de fichiers en réseau local (mode CLI)",
+        description="Share++ CLI, serveur de partage de fichiers en réseau local en lignes de commandes.",
     )
     # Positional argument : mandatory, doesn't use --
     parser.add_argument("path", help="Répertoire à partager")
     # Optional arguments
     parser.add_argument("--port", type=int, default=8080, help="Port HTTP (défaut : 8080)")
-    parser.add_argument("--secure", action="store_true", help="Active la protection Basic Auth")
+    parser.add_argument("--secure", action="store_true", help="Active la protection par mot de passe")
 
     return parser.parse_args()
 
@@ -130,3 +130,6 @@ def run_cli():
     except KeyboardInterrupt:
         print()
         log("Arrêt demandé par l'utilisateur.", "info")
+
+if __name__ == "__main__":
+    run_cli()
