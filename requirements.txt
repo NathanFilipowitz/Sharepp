@@ -3,4 +3,3 @@ aiohttp
 qrcode
 Pillow
 pyinstaller
-pydantic
