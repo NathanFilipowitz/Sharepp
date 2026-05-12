@@ -3,3 +3,5 @@ aiohttp
 qrcode
 Pillow
 pyinstaller
+pydantic==2.13.4
+pydantic-core==2.33.2
