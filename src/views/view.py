@@ -210,7 +210,7 @@ class View:
             spacing=20,
         )
         
-        self.page.add(self.main_row)
+        self.page.add(ft.Column([self.main_row], expand=True, spacing=0))
 
         if self.controller.model.selected_path:
             self.update_ui_for_path(self.controller.model.selected_path)

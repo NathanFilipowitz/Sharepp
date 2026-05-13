@@ -42,6 +42,8 @@ def main(page: ft.Page):
     page.window.height = 800
     page.window.min_width = 1000
     page.window.min_height = 800
+    page.vertical_alignment = ft.MainAxisAlignment.START
+    page.expand = True
 
     app = Controller(page)
 
