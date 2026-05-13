@@ -8,8 +8,10 @@ Purpose: Handle frontend/User Interface for the application
 """
 
 
-import flet as ft
 import datetime
+import os
+import flet as ft
+import subprocess
 import sys
 import webbrowser
 
@@ -106,16 +108,21 @@ class View:
                             on_click=self.controller.toggle_remember_path
                         ),
                         ft.PopupMenuItem(
-                            content="Effacer l'adresse",
-                            on_click=self.controller.clear_path),
-                        ft.PopupMenuItem(
                             content="Copier l'adresse automatiquement",
                             checked=self.controller.model.data["copy_to_clipboard"],
                             on_click=self.controller.toggle_copy_clipboard
                         ),
+                        ft.PopupMenuItem(),  # divider
+                        ft.PopupMenuItem(
+                            content="Effacer l'adresse",
+                            on_click=self.controller.clear_path),
                         ft.PopupMenuItem(
                             content="Changer le port",
                             on_click=self.controller.open_port_dialog
+                        ),
+                        ft.PopupMenuItem(
+                            content="Historique des téléchargements",
+                            on_click=self.controller.open_history,
                         ),
                     ],
                     icon_color=ft.Colors.WHITE
@@ -204,6 +211,9 @@ class View:
         )
         
         self.page.add(self.main_row)
+
+        if self.controller.model.selected_path:
+            self.update_ui_for_path(self.controller.model.selected_path)
     
     # View function to add a log to the logs container
     def add_log_entry(self, message, level):
@@ -288,6 +298,69 @@ class View:
             actions=[
                 ft.TextButton("Annuler", on_click=lambda e: setattr(dialog, 'open', False) or self.page.update()),
                 ft.TextButton("Enregistrer", on_click=save),
+            ],
+        )
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
+    
+    def open_history_dialog(self, history, shared_path):
+        # open file in file explorer if shared path was successfully recovered and path still exists
+        def open_in_explorer(filename):
+            if not shared_path:
+                return
+            filepath = os.path.join(shared_path, filename)
+            if os.path.exists(filepath):
+                subprocess.run(["explorer", "/select,", filepath], shell=False)
+
+        if not history:
+            rows = [ft.Text("Aucun téléchargement enregistré.", italic=True, color=ft.Colors.GREY_500)]
+        else:
+            rows = []
+            for entry in history:
+                filepath = os.path.join(shared_path or "", entry["filename"])
+                file_exists = shared_path and os.path.exists(filepath)
+
+                rows.append(
+                    ft.Container(
+                        content=ft.Row(
+                            [
+                                ft.Column(
+                                    [
+                                        ft.Text(entry["filename"], weight=ft.FontWeight.BOLD, size=13, overflow=ft.TextOverflow.ELLIPSIS),
+                                        ft.Text(f"{entry['timestamp']}  ·  {entry['ip']}  ·  {entry['device']}", size=11, color=ft.Colors.GREY_600),
+                                    ],
+                                    spacing=2,
+                                    expand=True,
+                                ),
+                                ft.IconButton(
+                                    icon=ft.Icons.FOLDER_OPEN_ROUNDED,
+                                    icon_size=18,
+                                    tooltip="Ouvrir dans l'explorateur",
+                                    disabled=not file_exists,
+                                    on_click=lambda e, f=entry["filename"]: open_in_explorer(f),
+                                ),
+                            ],
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                        border=ft.border.only(bottom=ft.BorderSide(1, ft.Colors.GREY_200)),
+                    )
+                )
+
+        dialog = ft.AlertDialog(
+            modal=True,  # Freezes app while window is openend
+            title=ft.Row([
+                ft.Icon(ft.Icons.HISTORY_ROUNDED, color=ft.Colors.BLUE_400),
+                ft.Text("Historique des téléchargements"),
+            ], spacing=8),
+            content=ft.Container(
+                content=ft.Column(rows, scroll=ft.ScrollMode.AUTO, spacing=0),
+                width=520,
+                height=400,
+            ),
+            actions=[
+                ft.TextButton("Fermer", on_click=lambda e: setattr(dialog, 'open', False) or self.page.update()),
             ],
         )
         self.page.overlay.append(dialog)
