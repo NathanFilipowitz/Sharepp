@@ -1,0 +1,194 @@
+/*
+  download.css
+  Author:  Nathan Filipowitz
+  Date:    2026-05-12
+  Purpose: Styles de la page de téléchargement Share++
+*/
+
+/* Reset style */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Body */
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  min-height: 100vh;
+  padding: 1.5rem 1rem 5rem;
+}
+
+/* Header */
+header {
+  max-width: 640px;
+  margin: 0 auto 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.logo { font-size: 1.2rem; font-weight: 600; color: #60a5fa; }
+.count-badge {
+  font-size: 0.75rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+
+/* Entire file-list column div */
+.file-list {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Card for file entries */
+.file-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transition: border-color 0.18s, background 0.18s;
+}
+.file-card:hover    { background: #253348; border-color: #4f6fa0; }
+.file-card.selected { background: #1a2d47; border-color: #3b82f6; }
+
+/* Hidden files/folders */
+.file-card.hidden-file         { opacity: 0.45; font-style: italic; }
+.file-card.hidden-file:hover   { opacity: 0.75; }
+
+/* Checkboxes */
+.cb { flex-shrink: 0; width: 16px; height: 16px; accent-color: #3b82f6; cursor: pointer; }
+
+/* SVG Icon */
+.file-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px;
+  background: #0f172a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Filename + metadata */
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-meta { display: block; font-size: 0.72rem; color: #64748b; }
+
+/* Download Button */
+.dl-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 500;
+  padding: 0.42rem 0.8rem;
+  border-radius: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.dl-btn:hover { background: #2563eb; }
+
+/* Bulk download button, hidden by default, shown with using JS */
+.bulk-btn {
+  display: none;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto 1rem;
+  padding: 0.6rem 1rem;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: background 0.15s;
+}
+.bulk-btn:hover   { background: #3b82f6; }
+.bulk-btn.visible { display: flex; }
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .file-card { flex-wrap: wrap; }
+  .file-info { flex: 1 1 60%; }
+  .dl-btn    { order: 3; width: 100%; justify-content: center; margin-top: 0.25rem; }
+}
+
+/* Empty state */
+.empty { text-align: center; color: #475569; padding: 3rem 0; }
+
+/* Center authentification page */
+body.auth-page {
+  min-height: 100vh;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 2rem 1.75rem;
+  width: 100%;
+  max-width: 360px;
+}
+.auth-logo { font-size: 1.2rem; font-weight: 600; color: #60a5fa; margin-bottom: 0.25rem; }
+.auth-sub  { font-size: 0.8rem; color: #64748b; margin-bottom: 1.5rem; }
+
+label {
+  display: block;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.4rem;
+}
+input[type="password"] {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input[type="password"]:focus { border-color: #3b82f6; }
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.65rem;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.submit-btn:hover  { background: #2563eb; }
+.error-msg { font-size: 0.78rem; color: #f87171; margin-top: 0.5rem; }
