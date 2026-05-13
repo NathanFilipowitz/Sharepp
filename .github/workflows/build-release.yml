@@ -54,9 +54,8 @@ jobs:
           flet build windows --verbose
           cd ..
       
-      - name: List build output
-        run: |
-          Get-ChildItem -Path "src\build\windows" -Recurse | Select-Object FullName
+      - name: Rename executable
+        run: Rename-Item "src\build\windows\src.exe" "sharepp.exe"
 
       - name: Install Inno Setup
         run: choco install innosetup -y
