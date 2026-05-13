@@ -1,20 +1,41 @@
 """
-server.py
+server_controller.py
 
 Author:  Nathan Filipowitz
 Date:    2026-05-05
 Purpose: Shared aiohttp server logic used by both app_controller.py (GUI) and cli.py (CLI).
-         Contains no Flet dependency
+         Contains no Flet dependency.
+         Authentication uses a custom HTML form instead of WWW-Authenticate Basic,
+         so only the password field is shown (no username prompt from the browser).
 """
 
 import base64
 import hashlib
+import hmac
 import os
 import shutil
 import tempfile
 from pathlib import Path
 from aiohttp import web
-from views.download_view import generate_html
+from views.download_view import generate_html, generate_auth_html
+
+# Static files (download.css, download.js) folder path
+_STATIC_DIR = Path(__file__).parent.parent / "views" / "static"
+
+# random sequence used to sign the session cookie. A new one is generated on each server startup
+_COOKIE_SECRET = os.urandom(32)
+_COOKIE_NAME = "sharepp_session"
+
+# return HMAC-signed token proving the user entered the correct password
+def _make_session_token(password_hash):
+    sig = hmac.new(_COOKIE_SECRET, password_hash.encode(), hashlib.sha256).hexdigest()
+    return sig
+
+# Check that session cookie was based on current password hash. Extra validation
+def _is_session_valid(cookie_value, password_hash):
+    expected = _make_session_token(password_hash)
+    return hmac.compare_digest(cookie_value, expected)
+
 
 # Identify device type and OS from HTTP User-Agent to render something readable for the user
 def parse_user_agent(ua):
@@ -43,33 +64,56 @@ def parse_user_agent(ua):
  
     return f"{device} ({os_name})"
 
-
-# Return an aiohttp middleware for basic auth password verification
-def make_auth_middleware(password_hash: str):
+# return the aiohttp password authentification middleware using the custom HTML password form.
+def make_auth_middleware(password_hash):
     @web.middleware
     async def auth_middleware(request, handler):
-        if not password_hash:
+        if request.path == "/password" or request.path.startswith("/static/"):
             return await handler(request)
- 
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Basic "):
-            try:
-                # Navigator sends: "Basic <base64(user:password)>"
-                decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
-                _, pwd = decoded.split(":", 1)
-                if hashlib.sha256(pwd.encode()).hexdigest() == password_hash:
-                    return await handler(request)
-            except Exception as e:
-                print(f"Middleware error: {e}")
- 
-        # Send the password Pop-up authentification page
-        return web.Response(
-            status=401,
-            headers={"WWW-Authenticate": 'Basic realm="Share++ (ignorer le champ utilisateur)"'},
-            text="Authentification requise",
-        )
- 
+
+        # Check session cookie
+        cookie = request.cookies.get(_COOKIE_NAME, "")
+        if cookie and _is_session_valid(cookie, password_hash):
+            return await handler(request)
+
+        # Redirect to password page if user is not authentificated
+        raise web.HTTPFound("/password")
+
     return auth_middleware
+
+# return GET and POST handlers for the /password route
+def make_login_handlers(password_hash):
+    async def handle_login_get(request):
+        return web.Response(
+            text=generate_auth_html(error=False),
+            content_type="text/html",
+        )
+
+    async def handle_login_post(request):
+        data = await request.post()
+        submitted = data.get("password", "")
+        submitted_hash = hashlib.sha256(submitted.encode()).hexdigest()
+
+        # Write session cookie to user browser. redirects to index
+        if hmac.compare_digest(submitted_hash, password_hash):
+            token = _make_session_token(password_hash)
+            response = web.HTTPFound("/")
+            response.set_cookie(
+                _COOKIE_NAME,
+                token,
+                httponly=True,
+                samesite="Strict",
+            )
+            return response
+
+        # Wrong password
+        return web.Response(
+            text=generate_auth_html(error=True),
+            content_type="text/html",
+            status=401,
+        )
+
+    return handle_login_get, handle_login_post
 
 
 # Returns index and download handlers. log_function can use both log solutions (GUI or TUI)
@@ -79,7 +123,10 @@ def make_handlers(shared_path, log_function):
         log_function(f"Connexion de {request.remote} [{device}]", "success")
         try:
             files = os.listdir(shared_path)
-            return web.Response(text=generate_html(files), content_type="text/html")
+            return web.Response(
+                text=generate_html(files, shared_path),
+                content_type="text/html",
+            )
         except Exception as e:
             log_function(f"Erreur lors de la lecture du répertoire : {e}", "error")
             return web.Response(text=str(e), status=500)
@@ -122,7 +169,6 @@ def make_handlers(shared_path, log_function):
  
         return web.Response(text="Fichier introuvable", status=404)
 
-
     return handle_index, handle_download
 
 # Return a configured aiohttp web.Application
@@ -132,6 +178,15 @@ def build_app(shared_path, password_hash, log_function):
 
     handle_index, handle_download = make_handlers(shared_path, log_function)
     app.router.add_get("/", handle_index)
+
+    # add download.css and download.js
+    app.router.add_static("/static", _STATIC_DIR)
     app.router.add_get("/{filename}", handle_download)
+
+    # Login routes (only active when protection is active)
+    if password_hash:
+        login_get, login_post = make_login_handlers(password_hash)
+        app.router.add_get("/password", login_get)
+        app.router.add_post("/password", login_post)
 
     return app
