@@ -181,6 +181,10 @@ class Controller:
         
         return f"data:image/png;base64,{img_b64}"
     
+    def open_history(self, e=None):
+        history = self.model.get_download_history()
+        self.view.open_history_dialog(history, self.model.selected_path)
+    
     async def toggle_hotspot(self, e):
         # prevention against running netsh without admin (app crash)
         if sys.platform == "win32":
