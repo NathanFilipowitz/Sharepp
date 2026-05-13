@@ -52,7 +52,6 @@ def main(page: ft.Page):
             page.run_task(app.start_server, None)
             app.view.update_ui_for_path(folder_path)
             page.update()
-    sys.exit(100)
 
 # ft.run(main, assets_dir="assets")
 ft.run(main)

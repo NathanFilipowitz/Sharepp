@@ -53,9 +53,6 @@ jobs:
           cd src
           flet build windows --verbose
           cd ..
-      
-      - name: Rename executable
-        run: Rename-Item "src\build\windows\src.exe" "sharepp.exe"
 
       - name: Install Inno Setup
         run: choco install innosetup -y
