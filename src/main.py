@@ -32,7 +32,7 @@ if sys.platform == "win32" and getattr(sys, "frozen", False):
 # AI FIX (Gemini): use asyncio correct event loop for Windows
 if sys.platform == "win32":
     import asyncio
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import flet as ft
 from controllers.app_controller import Controller
