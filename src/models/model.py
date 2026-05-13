@@ -8,8 +8,9 @@ Purpose: Handles json database for the app, and methods to interact with it for 
 """
 import hashlib
 import json
-import os
 import logging
+import os
+import re
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -100,6 +101,31 @@ class Model:
         except Exception as e:
             print(f"Erreur lors de la sauvegarde: {e}")
     
+    # Parses sharepp.log, returns download entries in following dictionnary format: timestamp, ip, device, filename
+    def get_download_history(self):
+        if not self.log_path.exists():
+            return []
+
+        pattern = re.compile(
+            r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) \[WARNING\] ([\d\.]+) \[(.+?)\] télécharge '(.+)'"
+        )
+        entries = []
+        try:
+            text = self.log_path.read_text(encoding="utf-8")
+            for match in pattern.finditer(text):
+                timestamp, ip, device, filename = match.groups()
+                if filename == "favicon.ico":
+                    continue
+                entries.append({
+                    "timestamp": timestamp,
+                    "ip":        ip,
+                    "device":    device,
+                    "filename":  filename,
+                })
+        except Exception as e:
+            print(f"Erreur lecture historique : {e}")
+
+        return list(reversed(entries))  # Most recent first 
 
     def toggle_remember_path(self):
         self.data["remember_path"] = not self.data["remember_path"]
