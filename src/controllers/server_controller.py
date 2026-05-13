@@ -14,13 +14,22 @@ import hashlib
 import hmac
 import os
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 from aiohttp import web
 from views.download_view import generate_html, generate_auth_html
 
 # Static files (download.css, download.js) folder path
-_STATIC_DIR = Path(__file__).parent.parent / "views" / "static"
+# AI FIX (Gemini): "my previous code was working on the release executable built by my workflow. 
+# I don't think the packaging problem is linked to my workflow but rather to the newly added functionnality. 
+# Look specifically for code working on development environment but not in production."
+# Solves static path correctly in development environment and in for the package built version
+if getattr(sys, 'frozen', False):
+    # Packaged version : path is relative to .exe
+    _STATIC_DIR = Path(sys.executable).parent / "views" / "static"
+else:
+    _STATIC_DIR = Path(__file__).parent.parent / "views" / "static"
 
 # random sequence used to sign the session cookie. A new one is generated on each server startup
 _COOKIE_SECRET = os.urandom(32)
@@ -180,7 +189,8 @@ def build_app(shared_path, password_hash, log_function):
     app.router.add_get("/", handle_index)
 
     # add download.css and download.js
-    app.router.add_static("/static", _STATIC_DIR)
+    if _STATIC_DIR.exists():
+        app.router.add_static("/static", _STATIC_DIR)
     app.router.add_get("/{filename}", handle_download)
 
     # Login routes (only active when protection is active)
