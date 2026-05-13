@@ -28,7 +28,6 @@ if sys.platform == "win32" and getattr(sys, "frozen", False):
     except Exception:
         pass
 
-
 # AI FIX (Gemini): use asyncio correct event loop for Windows
 if sys.platform == "win32":
     import asyncio
@@ -36,7 +35,6 @@ if sys.platform == "win32":
 
 import flet as ft
 from controllers.app_controller import Controller
-
 
 def main(page: ft.Page):
     page.title = "Share++"
@@ -54,7 +52,7 @@ def main(page: ft.Page):
             page.run_task(app.start_server, None)
             app.view.update_ui_for_path(folder_path)
             page.update()
-
+    sys.exit(100)
 
 # ft.run(main, assets_dir="assets")
 ft.run(main)
