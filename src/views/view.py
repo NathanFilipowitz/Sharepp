@@ -189,7 +189,7 @@ class View:
                 ink=True,
                 padding=20
             ),
-            margin=ft.margin.only(left=20, right=20, top=20, bottom=0),
+            margin=ft.Margin(left=20, right=20, top=20, bottom=0),
             elevation=10,
             expand=True
         )
@@ -214,6 +214,14 @@ class View:
 
         if self.controller.model.selected_path:
             self.update_ui_for_path(self.controller.model.selected_path)
+    
+    def set_hotspot_supported(self, supported: bool):
+        self.hotspot_chip.disabled = not supported
+        self.hotspot_config_button.disabled = not supported
+        if not supported:
+            self.hotspot_chip.tooltip = "Nécessite Windows et une carte Wi-Fi compatible"
+            self.hotspot_chip.selected = False
+        self.page.update()
     
     # View function to add a log to the logs container
     def add_log_entry(self, message, level):
@@ -328,7 +336,7 @@ class View:
                                 ft.Column(
                                     [
                                         ft.Text(entry["filename"], weight=ft.FontWeight.BOLD, size=13, overflow=ft.TextOverflow.ELLIPSIS),
-                                        ft.Text(f"{entry['timestamp']}  ·  {entry['ip']}  ·  {entry['device']}", size=11, color=ft.Colors.GREY_600),
+                                        ft.Text(f"{entry['timestamp']}  -  {entry['ip']}  -  {entry['device']}", size=11, color=ft.Colors.GREY_600),
                                     ],
                                     spacing=2,
                                     expand=True,
@@ -343,8 +351,8 @@ class View:
                             ],
                             vertical_alignment=ft.CrossAxisAlignment.CENTER,
                         ),
-                        padding=ft.padding.symmetric(horizontal=12, vertical=8),
-                        border=ft.border.only(bottom=ft.BorderSide(1, ft.Colors.GREY_200)),
+                        padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+                        border=ft.Border.only(bottom=ft.BorderSide(1, ft.Colors.GREY_200)),
                     )
                 )
 
@@ -416,8 +424,8 @@ class View:
                     ], spacing=8),
                     bgcolor=ft.Colors.BLUE_50,
                     border_radius=8,
-                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
-                    margin=ft.margin.symmetric(horizontal=8),
+                    padding=ft.Padding.symmetric(horizontal=12, vertical=8),
+                    margin=ft.Margin.symmetric(horizontal=8),
                 )
             )
 
@@ -443,7 +451,7 @@ class View:
                         ft.Icon(ft.Icons.LAN, color=ft.Colors.GREY_600, size=16),
                         ft.Text("Réseau local", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.GREY_600),
                     ], spacing=6),
-                    padding=ft.padding.only(left=16, top=4, bottom=4),
+                    padding=ft.Padding(left=16, top=4, bottom=4),
                 )
             )
             tiles.append(self._make_qr_expansion_tile("Réseau local", local_qr, local_url))
@@ -457,7 +465,7 @@ class View:
                         ft.Icon(ft.Icons.VPN_LOCK_ROUNDED, color=ft.Colors.PURPLE_400, size=16),
                         ft.Text("Tunnel (Tailscale)", weight=ft.FontWeight.BOLD, size=13, color=ft.Colors.PURPLE_400),
                     ], spacing=6),
-                    padding=ft.padding.only(left=16, top=4, bottom=4),
+                    padding=ft.Padding(left=16, top=4, bottom=4),
                 )
             )
             tiles.append(self._make_qr_expansion_tile("Tailscale", ts_qr, ts_url))
@@ -503,7 +511,7 @@ class View:
                     subtitle=ft.Text(f"{ssid}  ·  mdp : {password}", size=11),
                     expanded=False,
                     maintain_state=True,
-                    controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+                    controls_padding=ft.Padding.symmetric(horizontal=8, vertical=8),
                     controls=[
                         ft.Column(
                             [ft.Image(src=wifi_qr, width=180, height=180, fit=ft.BoxFit.CONTAIN)],
@@ -542,7 +550,7 @@ class View:
                     ),
                     expanded=False,
                     maintain_state=True,
-                    controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+                    controls_padding=ft.Padding.symmetric(horizontal=8, vertical=8),
                     controls=[
                         ft.Column(
                             [ft.Image(src=url_qr, width=180, height=180, fit=ft.BoxFit.CONTAIN)],
@@ -587,7 +595,7 @@ class View:
             leading=ft.Icon(icon),
             expanded=expanded,
             maintain_state=True,
-            controls_padding=ft.padding.symmetric(horizontal=8, vertical=8),
+            controls_padding=ft.Padding.symmetric(horizontal=8, vertical=8),
             controls=[
                 ft.Column(
                     [
