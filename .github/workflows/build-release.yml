@@ -50,7 +50,7 @@ jobs:
           cd ..
       
       - name: Rename exe
-        run: Rename-Item src\build\windows\src.exe src\build\windows\sharepp.exe
+        run: Rename-Item src\build\windows\src.exe sharepp.exe
 
       - name: Install Inno Setup
         run: choco install innosetup -y
