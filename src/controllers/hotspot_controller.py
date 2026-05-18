@@ -39,7 +39,13 @@ def ensure_admin():
         _elevate_and_restart()
     return True
  
-
+def is_hotspot_supported():
+    if platform.system() != "Windows":
+        return False
+    ok, output = execute_command("netsh wlan show hostednetwork")
+    if not ok:
+        return False
+    return "Not available" not in output and "non pris en charge" not in output
 
 def get_hotspot_status():
     # Check if hotspot is active
