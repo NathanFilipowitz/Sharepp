@@ -3,7 +3,6 @@
 # Author:  Nathan Filipowitz
 # Desc:    Automatic build and release CD workflow
 
-
 name: Build & Release Windows Installer
 
 on:
@@ -17,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -40,15 +39,15 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.4'
-      
-      - name: Check versions
-        run: pip show pydantic pydantic-core aiohttp yarl
 
       - name: Build with Flet
         env:
           PYTHONUTF8: "1"
         run: |
+          Copy-Item requirements.txt src\requirements.txt
+          cd src
           flet build windows --verbose
+          cd ..
 
       - name: Install Inno Setup
         run: choco install innosetup -y
