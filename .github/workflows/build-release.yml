@@ -52,6 +52,9 @@ jobs:
       - name: Rename exe
         run: Rename-Item src\build\windows\src.exe sharepp.exe
 
+      - name: Verify build output
+        run: Get-ChildItem src\build\windows\ | Select-Object Name
+
       - name: Install Inno Setup
         run: choco install innosetup -y
 
