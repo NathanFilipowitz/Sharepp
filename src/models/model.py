@@ -114,6 +114,7 @@ class Model:
             text = self.log_path.read_text(encoding="utf-8")
             for match in pattern.finditer(text):
                 timestamp, ip, device, filename = match.groups()
+                # Eclude useless "download favicon.ico" entry
                 if filename == "favicon.ico":
                     continue
                 entries.append({

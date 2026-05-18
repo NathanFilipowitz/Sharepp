@@ -21,7 +21,6 @@ from models.model import Model
 from controllers import hotspot_controller
 from controllers import network_controller
 from controllers.server_controller import build_app, parse_user_agent
-from controllers.hotspot_controller import ensure_admin
 from pathlib import Path
 from views import download_view
 from views.view import View
@@ -30,6 +29,12 @@ class Controller:
     def __init__(self, page: ft.Page):
         self.model = Model()
         self.view = View(page, self)
+
+        hotspot_supported = hotspot_controller.is_hotspot_supported()
+        if not hotspot_supported:
+            self.model.data["hotspot_enabled"] = False
+            self.model.save_settings()
+        self.view.set_hotspot_supported(hotspot_supported)
     
     # Thread dedicated to rendering logs, because the aiohttp server runs on a different one than Flet's.
     # message: "success", "warning", "error", "info"
@@ -188,7 +193,7 @@ class Controller:
     async def toggle_hotspot(self, e):
         # prevention against running netsh without admin (app crash)
         if sys.platform == "win32":
-            ensure_admin()
+            hotspot_controller.ensure_admin()
         status = await asyncio.to_thread(hotspot_controller.get_hotspot_status)
         if status["running"]:
             await self._stop_hotspot_ap(e)
