@@ -21,9 +21,12 @@ OutputDir=installer_output
 OutputBaseFilename=SharePlusPlus_Setup_{#AppVersion}
 
 [Files]
-Source: "src\build\windows\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "src\build\windows\*.dll";         DestDir: "{app}"; Flags: ignoreversion
-Source: "src\build\windows\data\*";        DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "src\build\windows\{#AppExeName}";    DestDir: "{app}"; Flags: ignoreversion
+Source: "src\build\windows\*.dll";            DestDir: "{app}"; Flags: ignoreversion
+Source: "src\build\windows\data\*";           DestDir: "{app}\data";          Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "src\build\windows\DLLs\*";           DestDir: "{app}\DLLs";          Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "src\build\windows\Lib\*";            DestDir: "{app}\Lib";           Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "src\build\windows\site-packages\*";  DestDir: "{app}\site-packages"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#AppName}";         Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
