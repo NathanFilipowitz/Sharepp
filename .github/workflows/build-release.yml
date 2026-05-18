@@ -49,11 +49,6 @@ jobs:
           PYTHONUTF8: "1"
         run: |
           flet build windows --verbose
-      
-      - name: Run cmake install
-        run: |
-          cd build\flutter\build\windows\x64
-          cmake -DBUILD_TYPE=Release -P cmake_install.cmake
 
       - name: Install Inno Setup
         run: choco install innosetup -y

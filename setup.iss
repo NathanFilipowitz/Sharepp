@@ -21,9 +21,10 @@ OutputDir=installer_output
 OutputBaseFilename=SharePlusPlus_Setup_{#AppVersion}
 
 [Files]
-Source: "build\flutter\build\windows\x64\runner\Release\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "build\flutter\build\windows\x64\runner\Release\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "build\flutter\build\windows\x64\runner\Release\data\*"; DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "build\windows\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "build\windows\*.dll";         DestDir: "{app}"; Flags: ignoreversion
+Source: "build\windows\data\*";        DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
