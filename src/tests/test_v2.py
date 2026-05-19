@@ -54,7 +54,7 @@ def test_tu06_short_password_rejected(mock_exec):
     from controllers.hotspot_controller import setup_and_start
 
     # Act & Assert
-    # Passwords under 8 chars must be refused without any system call
+    # Passwords under 8 chars must be refused
     assert setup_and_start("SharePlusPlus", "")[0] is False
     assert setup_and_start("Sharepp", "1234")[0] is False
     assert setup_and_start("Sharepp", "1234567")[0] is False
@@ -76,3 +76,15 @@ def test_tu06_valid_password_accepted(mock_platform, mock_exec):
 
     # Assert
     assert mock_exec.call_count >= 1
+
+@patch("controllers.hotspot_controller.execute_command", return_value=(True, "OK"))
+@patch("platform.system", return_value="Windows")
+def test_tu06_invalid_password_refused(mock_platform, mock_exec):
+    # Arrange
+    from controllers.hotspot_controller import setup_and_start
+
+    # Act 
+    setup_and_start("MonSSID", "1234567")
+
+    # Assert
+    assert mock_exec.call_count == 0
