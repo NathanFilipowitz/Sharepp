@@ -1,6 +1,11 @@
 
-*.pyc
-*.ods#
+*.bak
 *.bkp
-*.json
+.coverage
 *.ini
+*.json
+*.~lock.*
+*.ods#
+*.pyc
+src/report.html
+.vscode/
