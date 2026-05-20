@@ -1,0 +1,35 @@
+@startuml Use case Share++
+left to right direction
+
+actor "Hôte (Serveur)" as h #LightBlue
+actor "Client (Appareil distant)" as c #LightGreen
+
+rectangle "Share++ System" {
+    package "Application Serveur (GUI & CLI)" {
+        usecase "Sélectionner un répertoire à partager" as selectFolder
+        usecase "Configurer la sécurité (Mot de passe/Port)" as configSec
+        usecase "Créer un point d'accès Wi-Fi ad hoc" as hotspot
+        usecase "Consulter l'historique (Logs)" as viewLogs
+        usecase "Lancer le serveur headless (CLI)" as cli
+    }
+
+    package "Interface Web (Page de téléchargement)" {
+        usecase "Accéder via QR Code ou URL" as accessPage
+        usecase "S'authentifier (si protégé)" as auth
+        usecase "Sélectionner et télécharger des fichiers (Bulk)" as download
+    }
+}
+
+' Actions de l'Hôte
+h --> selectFolder
+h --> configSec
+h --> hotspot
+h --> viewLogs
+h --> cli
+
+' Actions du Client
+c --> accessPage
+c --> auth
+c --> download
+
+@enduml

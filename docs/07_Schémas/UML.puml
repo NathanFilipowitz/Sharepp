@@ -1,18 +1,14 @@
 @startuml Share++
-
 skinparam classAttributeIconSize 0
 skinparam packageStyle rectangle
 
 package "Point d'entrée" {
     class main {
         +main(page: ft.Page)
-        +is_admin(): bool
-        -- détecte --nogui --
-        -- élève les droits admin --
     }
 }
 
-package "Application Flet" {
+package "Mode GUI" {
     class app_controller {
         -model: Model
         -view: View
@@ -22,21 +18,22 @@ package "Application Flet" {
         +pick_folder(e)
         +toggle_hotspot(e)
         +open_port_dialog(e)
+        +open_history(e)
+        +save_hotspot_credentials(ssid, password)
         +generate_qr_data_url(url): str
         -_detect_all_ips(): tuple
-        -_show_connection_info(local_ip, overlay_ips)
+        -_show_connection_info(local_ip, tailscale_ip, hotspot_ip)
     }
-
     class View {
         -page: ft.Page
         -controller: app_controller
         +add_log_entry(message, level)
-        +update_server_controller_status(running)
-        +show_qr_code(qr_data, url)
-        +show_dual_qr(...)
-        +show_hotspot_qr_codes(...)
+        +update_server_status(running)
+        +show_connection_tiles(...)
         +show_controls()
-        +update_hotspot_button(running)
+        +open_history_dialog(history, shared_path)
+        +open_hotspot_config_dialog()
+        -_make_qr_expansion_tile(...)
     }
 }
 
@@ -59,13 +56,17 @@ package "Modèle" {
         +load_settings()
         +save_settings()
         +log_to_file(message, level)
+        +get_download_history(): list
         +set_path(path)
         +set_port(port)
         +set_password(pwd)
         +check_password(input_pwd): bool
         +set_hotspot_credentials(ssid, pwd)
         +toggle_protection()
-        +toggle_qr()
+        +toggle_hotspot_enabled()
+        +toggle_remember_path()
+        +toggle_copy_clipboard()
+        +toggle_logs()
     }
 }
 
@@ -74,45 +75,43 @@ package "Contrôleurs partagés" {
         +build_app(shared_path, password_hash, log_fn): Application
         +make_handlers(shared_path, log_fn): tuple
         +make_auth_middleware(password_hash): middleware
+        +make_login_handlers(password_hash): tuple
         +parse_user_agent(ua): str
     }
-
     class network_controller {
         +get_local_ip(): str
         +get_tailscale_ip(port): str
+        +get_hotspot_ip(): str
         -{static}_detect_tailscale_ip(): str
         -{static}_is_reachable(ip, port): bool
     }
-
     class hotspot_controller {
+        +ensure_admin(): bool
         +get_hotspot_status(): dict
         +setup_and_start(ssid, password): tuple
         +stop_hotspot(): tuple
         +execute_command(command): tuple
+        -{static}_is_admin(): bool
+        -{static}_elevate_and_restart()
     }
 }
 
 package "Vue Web" {
     class download_view {
-        +generate_html(files): str
+        +generate_html(files, shared_path): str
+        +generate_auth_html(error): str
     }
 }
 
 ' Relations
-main --> app_controller : instancie (mode GUI)
-main --> cli : délègue (--nogui)
-
+main --> app_controller : instancie
 app_controller --> Model : lit/écrit
 app_controller --> View : met à jour
 app_controller --> server_controller : build_app()
-app_controller --> network_controller : get_local_ip(), get_tailscale_ip()
-app_controller --> hotspot_controller : toggle_hotspot
-
+app_controller --> network_controller : get_local_ip(), get_tailscale_ip(), get_hotspot_ip()
+app_controller --> hotspot_controller : ensure_admin(), setup_and_start(), stop_hotspot()
 cli --> server_controller : build_app()
 cli --> network_controller : get_local_ip()
-
-server_controller --> download_view : generate_html()
-
+server_controller --> download_view : generate_html(), generate_auth_html()
 View --> app_controller : événements utilisateur
-
 @enduml

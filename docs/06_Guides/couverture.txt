@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-8.4.2, pluggy-1.6.0
+rootdir: /home/fluzenn/CPNV/trimestre_7/pré-tpi/Sharepp
+configfile: pytest.ini
+plugins: metadata-3.1.1, asyncio-1.3.0, aiohttp-1.1.0, cov-7.1.0, html-3.2.0, anyio-4.12.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 0 items
+
+WARNING: Failed to generate report: No data to report.
+
+
+- generated html file: file:///home/fluzenn/CPNV/trimestre_7/pr%C3%A9-tpi/Sharepp/docs/06_Guides/rapport.html -
+============================ no tests ran in 0.02s =============================
